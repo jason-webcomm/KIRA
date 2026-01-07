@@ -111,15 +111,16 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 
 // Configure auto-updater for S3
-if (app.isPackaged) {
-  autoUpdater.setFeedURL({
-    provider: 's3',
-    bucket: 'kira-releases',
-    region: 'ap-northeast-2',
-    path: '/download'
-  });
-  log.info('Auto-updater configured for S3');
-}
+// Disabled - manually controlled
+// if (app.isPackaged) {
+//   autoUpdater.setFeedURL({
+//     provider: 's3',
+//     bucket: 'kira-releases',
+//     region: 'ap-northeast-2',
+//     path: '/download'
+//   });
+//   log.info('Auto-updater configured for S3');
+// }
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -903,13 +904,14 @@ app.whenReady().then(() => {
   registerIPCHandlers();
 
   // Setup and check for updates
-  if (app.isPackaged) {
-    setupAutoUpdater();
-    // Check for updates 5 seconds after app start (don't interrupt initial loading)
-    setTimeout(() => {
-      autoUpdater.checkForUpdatesAndNotify();
-    }, 5000);
-  }
+  // Disabled - manually controlled
+  // if (app.isPackaged) {
+  //   setupAutoUpdater();
+  //   // Check for updates 5 seconds after app start (don't interrupt initial loading)
+  //   setTimeout(() => {
+  //     autoUpdater.checkForUpdatesAndNotify();
+  //   }, 5000);
+  // }
 });
 
 app.on('window-all-closed', () => {
