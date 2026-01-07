@@ -59,6 +59,13 @@ class Settings(BaseSettings):
     ATLASSIAN_CONFLUENCE_SITE_URL: str = ""
     ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID: str = ""
     ATLASSIAN_JIRA_SITE_URL: str = ""
+    JIRA_PERSONAL_TOKEN: str = ""
+    JIRA_URL: str = ""
+    CONFLUENCE_PERSONAL_TOKEN: str = ""
+    CONFLUENCE_URL: str = ""
+
+    ANTHROPIC_BASE_URL: str = ""
+    ANTHROPIC_API_KEY: str = ""
 
     # MCP - Tableau
     TABLEAU_ENABLED: bool = False

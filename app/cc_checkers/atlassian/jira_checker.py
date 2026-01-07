@@ -58,11 +58,16 @@ JSON 배열로만 응답 (설명 없이):
 
 **주의:** 이슈 없으면 빈 배열 [] 반환"""
 
-    # Atlassian MCP 서버 설정 (remote)
+    # Atlassian MCP 서버 설정 (Data Center) - use environment variables
     mcp_servers = {
         "atlassian": {
-            "command": "npx",
-            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"]
+            "command": "uvx",
+            "args": ["mcp-atlassian"],
+            "env": {
+                "JIRA_URL": settings.JIRA_URL,
+                "JIRA_PERSONAL_TOKEN": settings.JIRA_PERSONAL_TOKEN,
+                "JIRA_SSL_VERIFY": "false"
+            }
         }
     }
 

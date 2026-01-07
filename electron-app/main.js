@@ -669,11 +669,19 @@ function registerIPCHandlers() {
       fs.mkdirSync(CONFIG_DIR, { recursive: true });
     }
 
+    const existingConfig = fs.existsSync(CONFIG_FILE) ? parseConfigFile(CONFIG_FILE) : {};
+    if (existingConfig.ANTHROPIC_BASE_URL) {
+      config.ANTHROPIC_BASE_URL = existingConfig.ANTHROPIC_BASE_URL;
+    }
+    if (existingConfig.ANTHROPIC_API_KEY) {
+      config.ANTHROPIC_API_KEY = existingConfig.ANTHROPIC_API_KEY;
+    }
+
     // Build config sections
     const sections = {
       'Slack 연동': ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN', 'SLACK_SIGNING_SECRET', 'SLACK_TEAM_ID'],
       '봇 정보': ['BOT_NAME', 'BOT_EMAIL', 'BOT_ORGANIZATION', 'BOT_TEAM', 'BOT_AUTHORIZED_USERS_EN', 'BOT_AUTHORIZED_USERS_KR', 'BOT_ROLE', 'FILESYSTEM_BASE_DIR'],
-      'AI 모델 설정': ['MODEL_FOR_SIMPLE', 'MODEL_FOR_MODERATE', 'MODEL_FOR_COMPLEX'],
+      'AI 모델 설정': ['MODEL_FOR_SIMPLE', 'MODEL_FOR_MODERATE', 'MODEL_FOR_COMPLEX', 'ANTHROPIC_BASE_URL', 'ANTHROPIC_API_KEY'],
       'MCP 설정 - Perplexity': ['PERPLEXITY_ENABLED', 'PERPLEXITY_API_KEY'],
       'MCP 설정 - DeepL': ['DEEPL_ENABLED', 'DEEPL_API_KEY'],
       'MCP 설정 - GitHub': ['GITHUB_ENABLED', 'GITHUB_PERSONAL_ACCESS_TOKEN'],
