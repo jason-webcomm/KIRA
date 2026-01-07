@@ -15,6 +15,7 @@ KIRA의 기본 설정([Slack 연동](/ko/getting-started#%E2%9A%99%EF%B8%8F-3%EB
 - [DeepL (문서 번역)](/ko/setup/deepl) - 문서 번역
 - [GitHub](/ko/setup/github) - GitHub 저장소 연동
 - [GitLab](/ko/setup/gitlab) - GitLab 저장소 연동
+- [Gitea](/ko/setup/gitea) - Gitea 저장소 연동
 - [Microsoft 365 (Outlook/OneDrive/SharePoint)](/ko/setup/ms365) - 이메일 및 파일 자동 관리
 - [Confluence & Jira](/ko/setup/atlassian) - 문서 및 이슈 추적
 - [Tableau](/ko/setup/tableau) - BI 대시보드 연동
@@ -76,7 +77,7 @@ cp ~/.kira/config.env ~/Desktop/kira-config-backup.env
 ### 💻 개발자
 ```
 ✓ Slack 연동
-✓ GitHub / GitLab
+✓ GitHub / GitLab / Gitea
 ✓ Confluence & Jira
 ✓ Perplexity 웹 검색
 ```

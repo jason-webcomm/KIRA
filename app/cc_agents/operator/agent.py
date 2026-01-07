@@ -96,6 +96,16 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             },
         }
 
+    # MCP 설정 - Gitea
+    if settings.GITEA_ENABLED:
+        mcp_servers["gitea"] = {
+            "command": "npx",
+            "args": ["-y", "gitea-mcp", "-t", "stdio", "--host", settings.GITEA_HOST or "https://gitea.com"],
+            "env": {
+                "GITEA_ACCESS_TOKEN": settings.GITEA_ACCESS_TOKEN,
+            },
+        }
+
     # MCP 설정 - Microsoft 365 (Lokka)
     if settings.MS365_ENABLED:
         mcp_servers["ms365"] = {
@@ -235,6 +245,12 @@ def build_tool_usage_rules(settings: Settings) -> str:
     if settings.GITLAB_ENABLED:
         conditional_rules.append(
             "- Gitlab 링크(예: https://gitlab.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitlab__*` 도구를 사용하세요."
+        )
+
+    # MCP 설정 - Gitea
+    if settings.GITEA_ENABLED:
+        conditional_rules.append(
+            "- Gitea 링크(예: https://gitea.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitea__*` 도구를 사용하세요."
         )
 
     # MCP - Microsoft 365 (Lokka)

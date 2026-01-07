@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     GITLAB_API_URL: str = ""
     GITLAB_PERSONAL_ACCESS_TOKEN: str = ""
 
+    # MCP - Gitea
+    GITEA_ENABLED: bool = False
+    GITEA_ACCESS_TOKEN: str = ""
+    GITEA_HOST: str = ""
+
     # MCP - Microsoft 365 (Lokka)
     MS365_ENABLED: bool = False
     MS365_CLIENT_ID: str = ""

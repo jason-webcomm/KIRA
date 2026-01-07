@@ -15,6 +15,7 @@ MCP (Model Context Protocol) servers you can enable as needed.
 - [DeepL (Document Translation)](/setup/deepl) - Document translation
 - [GitHub](/setup/github) - GitHub repository integration
 - [GitLab](/setup/gitlab) - GitLab repository integration
+- [Gitea](/setup/gitea) - Gitea repository integration
 - [Microsoft 365 (Outlook/OneDrive/SharePoint)](/setup/ms365) - Email and file auto-management
 - [Confluence & Jira](/setup/atlassian) - Document and issue tracking
 - [Tableau](/setup/tableau) - BI dashboard integration
@@ -76,7 +77,7 @@ Recommended settings by work type.
 ### 💻 Developers
 ```
 ✓ Slack Integration
-✓ GitHub / GitLab
+✓ GitHub / GitLab / Gitea
 ✓ Confluence & Jira
 ✓ Perplexity Web Search
 ```

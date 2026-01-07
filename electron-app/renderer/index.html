@@ -278,6 +278,26 @@
 
             <div class="mcp-item">
               <div class="mcp-header">
+                <span class="mcp-title">Gitea</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="GITEA_ENABLED">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="mcp-fields" data-mcp="gitea" style="display: none;">
+                <div class="form-group">
+                  <label for="GITEA_HOST">Gitea Host URL</label>
+                  <input type="text" id="GITEA_HOST" placeholder="https://gitea.com">
+                </div>
+                <div class="form-group">
+                  <label for="GITEA_ACCESS_TOKEN">Access Token</label>
+                  <input type="password" id="GITEA_ACCESS_TOKEN" placeholder="">
+                </div>
+              </div>
+            </div>
+
+            <div class="mcp-item">
+              <div class="mcp-header">
                 <span class="mcp-title">Microsoft 365 (Outlook/OneDrive/SharePoint)</span>
                 <label class="toggle-switch">
                   <input type="checkbox" id="MS365_ENABLED">
