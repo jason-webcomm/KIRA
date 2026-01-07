@@ -36,6 +36,8 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     Returns:
         dict: 활성화된 MCP 서버 딕셔너리
     """
+    import logging
+    logger = logging.getLogger(__name__)
     # 기본 서버들 (항상 포함)
     mcp_servers = {
         "slack": create_slack_mcp_server(),
@@ -98,6 +100,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
 
     # MCP 설정 - Gitea
     if settings.GITEA_ENABLED:
+        logger.info(f"[MCP_CONFIG] Gitea MCP enabled: HOST={settings.GITEA_HOST}, TOKEN={'SET' if settings.GITEA_ACCESS_TOKEN else 'NOT SET'}")
         mcp_servers["gitea"] = {
             "command": "npx",
             "args": ["-y", "gitea-mcp", "-t", "stdio", "--host", settings.GITEA_HOST or "https://gitea.com"],
@@ -105,6 +108,8 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
                 "GITEA_ACCESS_TOKEN": settings.GITEA_ACCESS_TOKEN,
             },
         }
+    else:
+        logger.info("[MCP_CONFIG] Gitea MCP disabled")
 
     # MCP 설정 - Microsoft 365 (Lokka)
     if settings.MS365_ENABLED:
@@ -120,6 +125,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
 
     # MCP 설정 - Atlassian Data Center (Confluence, Jira)
     if settings.ATLASSIAN_ENABLED:
+        logger.info(f"[MCP_CONFIG] Atlassian MCP enabled: CONFLUENCE_URL={settings.CONFLUENCE_URL}, CONFLUENCE_TOKEN={'SET' if settings.CONFLUENCE_PERSONAL_TOKEN else 'NOT SET'}, JIRA_URL={settings.JIRA_URL}, JIRA_TOKEN={'SET' if settings.JIRA_PERSONAL_TOKEN else 'NOT SET'}")
         mcp_servers["atlassian"] = {
             "command": "npx",
             "args": ["mcp-cache", "uvx", "-y", "mcp-atlassian"],
@@ -132,6 +138,8 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
                 "JIRA_SSL_VERIFY": "false",
             },
         }
+    else:
+        logger.info("[MCP_CONFIG] Atlassian MCP disabled")
 
     # MCP 설정 - TABLEAU MCP
     if settings.TABLEAU_ENABLED:
