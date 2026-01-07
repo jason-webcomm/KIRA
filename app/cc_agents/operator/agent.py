@@ -118,11 +118,19 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             }
         }
 
-    # MCP 설정 - Atlassian Rovo MCP (Confluence, Jira)
+    # MCP 설정 - Atlassian Data Center (Confluence, Jira)
     if settings.ATLASSIAN_ENABLED:
         mcp_servers["atlassian"] = {
             "command": "npx",
-            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+            "args": ["mcp-cache", "uvx", "-y", "mcp-atlassian"],
+            "env": {
+                "CONFLUENCE_URL": settings.CONFLUENCE_URL,
+                "CONFLUENCE_PERSONAL_TOKEN": settings.CONFLUENCE_PERSONAL_TOKEN,
+                "CONFLUENCE_SSL_VERIFY": "false",
+                "JIRA_URL": settings.JIRA_URL,
+                "JIRA_PERSONAL_TOKEN": settings.JIRA_PERSONAL_TOKEN,
+                "JIRA_SSL_VERIFY": "false",
+            },
         }
 
     # MCP 설정 - TABLEAU MCP
