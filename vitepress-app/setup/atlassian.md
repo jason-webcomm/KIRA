@@ -4,8 +4,151 @@ Integrating Atlassian Rovo MCP allows KIRA to manage Confluence and Jira.
 
 ## 📋 Prerequisites
 
-- Atlassian account
+- Atlassian account (Cloud or Self-hosted)
 - Confluence and/or Jira access permissions
+- Personal Access Tokens (for Data Center mode)
+- Atlassian MCP Server running in HTTP mode
+
+---
+
+## 🔑 Step 1: Generate Personal Access Tokens
+
+### For Jira
+
+1. **Access Jira Settings**
+   - Go to your Jira site
+   - Click your profile icon → **Profile & Settings**
+
+2. **Create Token**
+   - Navigate to **Security** or **API Tokens**
+   - Click **Create API token**
+   - Label it: `KIRA Bot`
+   - Copy generated token
+
+### For Confluence
+
+1. **Access Confluence Settings**
+   - Go to your Confluence site
+   - Click your profile icon → **Settings**
+
+2. **Create Token**
+   - Navigate to **Personal Access Tokens**
+   - Click **Create token**
+   - Label it: `KIRA Bot`
+   - Copy generated token
+
+::: warning Token Security
+Personal Access Tokens are shown only once.
+Store them safely as you cannot view them again.
+:::
+
+---
+
+## 🌐 Step 2: Start Atlassian MCP Server (HTTP Mode)
+
+Atlassian MCP server needs to be running in HTTP mode for KIRA to connect.
+
+### Option A: Run Locally
+
+1. Install Atlassian MCP server:
+```bash
+npm install -g @atlassian/mcp-atlassian
+```
+
+2. Start the server in HTTP mode:
+```bash
+mcp-atlassian-server --transport http --port 9000
+```
+
+The server will be available at `http://localhost:9000/mcp`
+
+### Option B: Run with Docker
+
+```bash
+docker run -d \
+  -p 9000:9000 \
+  -e JIRA_URL=<your_jira_url> \
+  -e JIRA_PERSONAL_TOKEN=<your_jira_token> \
+  -e CONFLUENCE_URL=<your_confluence_url> \
+  -e CONFLUENCE_PERSONAL_TOKEN=<your_confluence_token> \
+  atlassian/mcp-atlassian:latest \
+  --transport http --port 9000
+```
+
+---
+
+## ⚙️ Step 3: Configure KIRA
+
+### 1. Launch KIRA App
+Open the Environment Variables tab.
+
+### 2. Find Atlassian Section
+**MCP Settings** > **Atlassian (Jira/Confluence)**
+
+### 3. Enable Setting
+- Turn the toggle switch **ON**
+
+### 4. Enter Site URLs
+
+**ATLASSIAN_CONFLUENCE_SITE_URL**
+- Enter your Confluence site URL
+- Example: `https://your-company.atlassian.net`
+- Or: `https://confluence.company.com` (Self-hosted)
+
+**ATLASSIAN_JIRA_SITE_URL**
+- Enter your Jira site URL
+- Example: `https://your-company.atlassian.net`
+- Or: `https://jira.company.com` (Self-hosted)
+
+::: tip Cloud vs Self-hosted
+- **Atlassian Cloud**: `https://yourname.atlassian.net` format
+- **Self-hosted (Server/Data Center)**: Uses company domain
+:::
+
+**ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID** (Optional)
+- Default page ID for "put this on wiki" requests
+- Find in Confluence page URL
+- Example: `https://...atlassian.net/wiki/spaces/ABC/pages/782407271/...`
+  - → Page ID: `782407271`
+
+**JIRA_PERSONAL_TOKEN**
+- Paste the Jira token you generated
+
+**JIRA_URL**
+- Your Jira site URL (same as ATLASSIAN_JIRA_SITE_URL)
+
+**CONFLUENCE_PERSONAL_TOKEN**
+- Paste the Confluence token you generated
+
+**CONFLUENCE_URL**
+- Your Confluence site URL (same as ATLASSIAN_CONFLUENCE_SITE_URL)
+
+**ATLASSIAN_MCP_HTTP_URL**
+- MCP server HTTP URL
+- Local: `http://localhost:9000/mcp`
+- Remote: `http://your-server:9000/mcp`
+
+### 5. Save Settings
+- Click **"Save Settings"** button
+- Restart server
+
+---
+
+## ✅ Step 4: Test
+
+Ask KIRA on Slack:
+
+```
+Show me recently updated Confluence pages
+```
+
+Or for Jira:
+
+```
+Show me my assigned Jira issues
+```
+
+KIRA will fetch information via Atlassian API.
 
 ---
 
@@ -159,20 +302,30 @@ KIRA: [Jira update] Changed status of ABC-123.
 
 ## 🔧 Troubleshooting
 
-### OAuth browser doesn't open
-- Check firewall for port 8000 blocking
-- Verify web interface is enabled
-- Check logs for error messages
+### "MCP server failed to start"
+- Verify Atlassian MCP server is running
+- Check `ATLASSIAN_MCP_HTTP_URL` is correct
+- Ensure the server is accessible from KIRA
+
+### "Authentication failed"
+- Verify Personal Access Tokens are correct
+- Check if tokens have expired
+- Verify tokens are active on Atlassian
+
+### "Connection refused"
+- Check if Atlassian MCP server is running on the specified port
+- Verify firewall settings
+- Ensure the URL protocol (http/https) is correct
+
+### "Permission denied"
+- Check Personal Access Token permissions
+- Verify repository access permissions
+- Confirm you have read/write permissions for Confluence/Jira
 
 ### "Site URL is invalid"
 - Verify ATLASSIAN_CONFLUENCE_SITE_URL is correct
 - Remove trailing slash (/) from URL
 - Confirm protocol (https://) is included
-
-### "Permission denied"
-- Check Atlassian account permissions
-- Verify Confluence/Jira access permissions
-- Confirm OAuth approval is complete
 
 ### Cannot access specific Space/Project
 - Verify you are a member of that Space/Project

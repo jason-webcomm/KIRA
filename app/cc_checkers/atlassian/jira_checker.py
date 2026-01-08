@@ -61,8 +61,8 @@ JSON 배열로만 응답 (설명 없이):
     # Atlassian MCP 서버 설정 (Data Center) - use environment variables
     mcp_servers = {
         "atlassian": {
-            "command": "uvx",
-            "args": ["mcp-atlassian"],
+            "command": "npx",
+            "args": ["mcp-cache", "npx", "-y", "mcp-remote", "http://localhost:9000/mcp"],
             "env": {
                 "JIRA_URL": settings.JIRA_URL,
                 "JIRA_PERSONAL_TOKEN": settings.JIRA_PERSONAL_TOKEN,

@@ -12,7 +12,7 @@ logging.basicConfig(
 
 # DEBUG: Check environment variables at startup
 logging.info(f"[STARTUP DEBUG] CLAUDE_CODE_CLI_PATH={os.environ.get('CLAUDE_CODE_CLI_PATH', 'NOT SET')}")
-logging.info(f"[STARTUP DEBUG] PATH={os.environ.get('PATH', 'NOT SET')[:200]}...")
+logging.info(f"[STARTUP DEBUG] PATH={os.environ.get('PATH', 'NOT SET')}")
 logging.info(f"[STARTUP DEBUG] WEB_INTERFACE_AUTH_PROVIDER={os.environ.get('WEB_INTERFACE_AUTH_PROVIDER', 'NOT SET')}")
 
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler

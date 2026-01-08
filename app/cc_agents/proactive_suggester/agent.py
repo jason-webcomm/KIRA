@@ -110,7 +110,12 @@ async def call_proactive_suggester(
     settings = get_settings()
 
     # 메모리가 없거나 "관련된 메모리가 없습니다"면 바로 False
-    if not retrieved_memory or "관련된 메모리가 없습니다" in retrieved_memory:
+    no_memory_patterns = [
+        "관련된 메모리가 없습니다",
+        "沒有相關記憶",
+        "No relevant memories found"
+    ]
+    if not retrieved_memory or any(p in retrieved_memory for p in no_memory_patterns):
         logging.info(f"[PROACTIVE_SUGGESTER] No relevant memory, skipping")
         return False
 

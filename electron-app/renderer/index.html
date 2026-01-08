@@ -15,6 +15,7 @@
         <div class="lang-toggle">
           <button class="lang-btn active" data-lang="en">EN</button>
           <button class="lang-btn" data-lang="ko">KO</button>
+          <button class="lang-btn" data-lang="zh-tw">TW</button>
         </div>
       </div>
       <nav class="sidebar-nav">
@@ -293,6 +294,11 @@
                   <label for="GITEA_ACCESS_TOKEN">Access Token</label>
                   <input type="password" id="GITEA_ACCESS_TOKEN" placeholder="">
                 </div>
+                <div class="form-group">
+                  <label for="GITEA_DISALLOWED_TOOLS">Disallowed Tools (comma-separated patterns)</label>
+                  <input type="text" id="GITEA_DISALLOWED_TOOLS" placeholder="mcp__gitea__delete_repo,mcp__gitea__delete_release">
+                  <small class="form-hint">Leave empty to allow all tools. Use * for wildcard matching.</small>
+                </div>
               </div>
             </div>
 
@@ -344,6 +350,10 @@
                   <label for="ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID">Confluence Default Page ID</label>
                   <input type="text" id="ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID" placeholder="782407271">
                   <small data-i18n="hints.confluenceDefaultPage">"위키에 올려줘" 요청 시 사용할 기본 페이지</small>
+                </div>
+                <div class="form-group">
+                  <label for="ATLASSIAN_MCP_REMOTE_URL">MCP Remote URL</label>
+                  <input type="text" id="ATLASSIAN_MCP_REMOTE_URL" placeholder="http://localhost:9000/mcp">
                 </div>
               </div>
             </div>

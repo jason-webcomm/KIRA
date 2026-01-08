@@ -6,6 +6,7 @@ Integrating Gitea API allows KIRA to manage code repositories.
 
 - Gitea account (gitea.com or Self-hosted)
 - Personal Access Token
+- Gitea MCP Server running in HTTP mode
 
 ---
 
@@ -43,7 +44,37 @@ Store it safely as you cannot view it again.
 
 ---
 
-## ⚙️ Step 2: Configure KIRA
+## 🌐 Step 2: Start Gitea MCP Server (HTTP Mode)
+
+Gitea MCP server needs to be running in HTTP mode for KIRA to connect.
+
+### Option A: Run Locally
+
+1. Install Gitea MCP server:
+```bash
+npm install -g gitea-mcp
+```
+
+2. Start the server in HTTP mode:
+```bash
+gitea-mcp --transport streamable-http --port 8080
+```
+
+The server will be available at `http://localhost:8080/mcp`
+
+### Option B: Run with Docker
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e GITEA_ACCESS_TOKEN=<your_token> \
+  gitea/gitea-mcp:latest \
+  --transport streamable-http --port 8080
+```
+
+---
+
+## ⚙️ Step 3: Configure KIRA
 
 ### 1. Launch KIRA App
 Open the Environment Variables tab.
@@ -59,6 +90,9 @@ Open the Environment Variables tab.
   - Gitea.com: `https://gitea.com`
   - Self-hosted: `https://git.company.com`
 - **GITEA_ACCESS_TOKEN**: The Access Token you copied
+- **GITEA_MCP_HTTP_URL**: MCP server HTTP URL
+  - Local: `http://localhost:8080/mcp`
+  - Remote: `http://your-server:8080/mcp`
 
 ### 5. Save Settings
 - Click **"Save Settings"** button
@@ -66,7 +100,7 @@ Open the Environment Variables tab.
 
 ---
 
-## ✅ Step 3: Test
+## ✅ Step 4: Test
 
 Ask KIRA on Slack:
 
@@ -120,15 +154,20 @@ KIRA: [Gitea query]
 
 ## 🔧 Troubleshooting
 
+### "MCP server failed to start"
+- Verify Gitea MCP server is running
+- Check `GITEA_MCP_HTTP_URL` is correct
+- Ensure the server is accessible from KIRA
+
 ### "Authentication failed"
 - Verify Access Token is correct
 - Check if token has expired
 - Verify token is active on Gitea
 
-### "Host URL is incorrect"
-- Verify GITEA_HOST is correct
-- For self-hosted, ensure URL is exact
-- Check protocol inclusion (https://)
+### "Connection refused"
+- Check if Gitea MCP server is running on the specified port
+- Verify firewall settings
+- Ensure the URL protocol (http/https) is correct
 
 ### "Permission denied"
 - Check Access Token permissions (scopes)
@@ -147,6 +186,13 @@ KIRA: [Gitea query]
 When using internal company Gitea server:
 - Enter company Gitea address in GITEA_HOST
 - Example: `https://git.company.com`
+
+### MCP Server Deployment
+For production deployment:
+- Run MCP server on a dedicated machine
+- Use HTTPS with proper SSL certificates
+- Configure reverse proxy (nginx) if needed
+- Set up process manager (systemd, PM2) to keep server running
 
 ### Token Management
 - Set clear token name (`KIRA Bot`)

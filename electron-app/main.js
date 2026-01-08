@@ -31,14 +31,16 @@ function loadTranslations() {
   try {
     const koPath = path.join(__dirname, 'locales', 'ko.json');
     const enPath = path.join(__dirname, 'locales', 'en.json');
+    const zhTwPath = path.join(__dirname, 'locales', 'zh-TW.json');
 
     translations.ko = JSON.parse(fs.readFileSync(koPath, 'utf8'));
     translations.en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
+    translations['zh-tw'] = JSON.parse(fs.readFileSync(zhTwPath, 'utf8'));
 
     log.info('Translations loaded successfully');
   } catch (err) {
     log.error('Failed to load translations:', err);
-    translations = { en: {}, ko: {} };
+    translations = { en: {}, ko: {}, 'zh-tw': {} };
   }
 }
 
@@ -454,6 +456,19 @@ async function startServer() {
   // Setup Node.js/npx for MCP servers (must be before setupClaudeCLI)
   setupNodePath(env);
 
+  // Add /usr/local/bin to PATH for tools like gitea-mcp
+  if (!env.PATH.includes('/usr/local/bin')) {
+    env.PATH = `/usr/local/bin:${env.PATH}`;
+    log.info('Added /usr/local/bin to PATH');
+  }
+
+  // Add ~/.local/bin to PATH for uvx
+  const localBinPath = path.join(os.homedir(), '.local/bin');
+  if (!env.PATH.includes(localBinPath)) {
+    env.PATH = `${localBinPath}:${env.PATH}`;
+    log.info(`Added ${localBinPath} to PATH`);
+  }
+
   // Setup Claude CLI
   setupClaudeCLI(env);
 
@@ -687,9 +702,9 @@ function registerIPCHandlers() {
       'MCP 설정 - DeepL': ['DEEPL_ENABLED', 'DEEPL_API_KEY'],
       'MCP 설정 - GitHub': ['GITHUB_ENABLED', 'GITHUB_PERSONAL_ACCESS_TOKEN'],
       'MCP 설정 - GitLab': ['GITLAB_ENABLED', 'GITLAB_API_URL', 'GITLAB_PERSONAL_ACCESS_TOKEN'],
-      'MCP 설정 - Gitea': ['GITEA_ENABLED', 'GITEA_HOST', 'GITEA_ACCESS_TOKEN'],
+      'MCP 설정 - Gitea': ['GITEA_ENABLED', 'GITEA_HOST', 'GITEA_ACCESS_TOKEN', 'GITEA_DISALLOWED_TOOLS'],
       'MCP 설정 - Microsoft 365 (Lokka)': ['MS365_ENABLED', 'MS365_CLIENT_ID', 'MS365_TENANT_ID'],
-      'MCP 설정 - Atlassian Rovo': ['ATLASSIAN_ENABLED', 'ATLASSIAN_CONFLUENCE_SITE_URL', 'ATLASSIAN_JIRA_SITE_URL', 'ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID'],
+      'MCP 설정 - Atlassian Rovo': ['ATLASSIAN_ENABLED', 'ATLASSIAN_CONFLUENCE_SITE_URL', 'ATLASSIAN_JIRA_SITE_URL', 'ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID', 'ATLASSIAN_MCP_REMOTE_URL'],
       'MCP 설정 - Tableau': ['TABLEAU_ENABLED', 'TABLEAU_SERVER', 'TABLEAU_SITE_NAME', 'TABLEAU_PAT_NAME', 'TABLEAU_PAT_VALUE'],
       'MCP 설정 - X (Twitter)': ['X_ENABLED', 'X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_TOKEN_SECRET', 'X_OAUTH2_CLIENT_ID', 'X_OAUTH2_CLIENT_SECRET'],
       'MCP 설정 - Clova Speech': ['CLOVA_ENABLED', 'CLOVA_INVOKE_URL', 'CLOVA_SECRET_KEY'],
@@ -782,7 +797,7 @@ function registerIPCHandlers() {
 
   // Language change
   ipcMain.handle('set-language', async (_event, lang) => {
-    if (['en', 'ko'].includes(lang)) {
+    if (['en', 'ko', 'zh-tw'].includes(lang)) {
       currentLang = lang;
       log.info('Language changed to:', lang);
       return { success: true };

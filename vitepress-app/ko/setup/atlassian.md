@@ -4,8 +4,151 @@ Atlassian Rovo MCP를 연동하면 KIRA가 Confluence와 Jira를 관리할 수 �
 
 ## 📋 준비물
 
-- Atlassian 계정
+- Atlassian 계정 (Cloud 또는 Self-hosted)
 - Confluence 및/또는 Jira 액세스 권한
+- 개인 액세스 토큰 (Data Center 모드용)
+- HTTP 모드로 실행 중인 Atlassian MCP 서버
+
+---
+
+## 🔑 1단계: 개인 액세스 토큰 생성
+
+### Jira용
+
+1. **Jira 설정 접속**
+   - Jira 사이트로 이동
+   - 프로필 아이콘 클릭 → **프로필 및 설정**
+
+2. **토큰 생성**
+   - **보안** 또는 **API 토큰**으로 이동
+   - **API 토큰 생성** 클릭
+   - 라벨: `KIRA Bot`
+   - 생성된 토큰 복사
+
+### Confluence용
+
+1. **Confluence 설정 접속**
+   - Confluence 사이트로 이동
+   - 프로필 아이콘 클릭 → **설정**
+
+2. **토큰 생성**
+   - **개인 액세스 토큰**으로 이동
+   - **토큰 생성** 클릭
+   - 라벨: `KIRA Bot`
+   - 생성된 토큰 복사
+
+::: warning 토큰 보안
+개인 액세스 토큰은 한 번만 표시됩니다.
+안전하게 보관하며 다시 볼 수 없습니다.
+:::
+
+---
+
+## 🌐 2단계: Atlassian MCP 서버 시작 (HTTP 모드)
+
+Atlassian MCP 서버가 HTTP 모드로 실행 중이어야 KIRA가 연결할 수 있습니다.
+
+### 옵션 A: 로컬에서 실행
+
+1. Atlassian MCP 서버 설치:
+```bash
+npm install -g @atlassian/mcp-atlassian
+```
+
+2. HTTP 모드로 서버 시작:
+```bash
+mcp-atlassian-server --transport http --port 9000
+```
+
+서버는 `http://localhost:9000/mcp`에서 사용 가능합니다.
+
+### 옵션 B: Docker로 실행
+
+```bash
+docker run -d \
+  -p 9000:9000 \
+  -e JIRA_URL=<your_jira_url> \
+  -e JIRA_PERSONAL_TOKEN=<your_jira_token> \
+  -e CONFLUENCE_URL=<your_confluence_url> \
+  -e CONFLUENCE_PERSONAL_TOKEN=<your_confluence_token> \
+  atlassian/mcp-atlassian:latest \
+  --transport http --port 9000
+```
+
+---
+
+## ⚙️ 3단계: KIRA 설정
+
+### 1. KIRA 앱 실행
+환경변수 설정 탭을 엽니다.
+
+### 2. Atlassian 섹션 찾기
+**MCP 설정** > **Atlassian (Jira/Confluence)**
+
+### 3. 설정 활성화
+- 토글 스위치를 **켜기**로 변경
+
+### 4. 사이트 URL 입력
+
+**ATLASSIAN_CONFLUENCE_SITE_URL**
+- Confluence 사이트 URL을 입력합니다
+- 예: `https://your-company.atlassian.net`
+- 또는: `https://confluence.company.com` (Self-hosted)
+
+**ATLASSIAN_JIRA_SITE_URL**
+- Jira 사이트 URL을 입력합니다
+- 예: `https://your-company.atlassian.net`
+- 또는: `https://jira.company.com` (Self-hosted)
+
+::: tip Cloud vs Self-hosted
+- **Atlassian Cloud**: `https://yourname.atlassian.net` 형식
+- **Self-hosted (Server/Data Center)**: 회사 도메인 사용
+:::
+
+**ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID** (선택사항)
+- "위키에 올려줘" 요청 시 사용할 기본 페이지 ID
+- Confluence 페이지 URL에서 확인 가능
+- 예: `https://...atlassian.net/wiki/spaces/ABC/pages/782407271/...`
+  - → Page ID: `782407271`
+
+**JIRA_PERSONAL_TOKEN**
+- 생성한 Jira 토큰 붙여넣기
+
+**JIRA_URL**
+- Jira 사이트 URL (ATLASSIAN_JIRA_SITE_URL과 동일)
+
+**CONFLUENCE_PERSONAL_TOKEN**
+- 생성한 Confluence 토큰 붙여넣기
+
+**CONFLUENCE_URL**
+- Confluence 사이트 URL (ATLASSIAN_CONFLUENCE_SITE_URL과 동일)
+
+**ATLASSIAN_MCP_HTTP_URL**
+- MCP 서버 HTTP URL
+- 로컬: `http://localhost:9000/mcp`
+- 원격: `http://your-server:9000/mcp`
+
+### 5. 설정 저장
+- **"설정 저장"** 버튼 클릭
+- 서버 재시작
+
+---
+
+## ✅ 4단계: 테스트
+
+Slack에서 KIRA에게 다음과 같이 질문하세요:
+
+```
+Confluence에서 최근 업데이트된 페이지 보여줘
+```
+
+또는 Jira를 사용하는 경우:
+
+```
+내게 할당된 Jira 이슈 보여줘
+```
+
+KIRA가 Atlassian API를 통해 정보를 가져옵니다.
 
 ---
 
@@ -159,20 +302,30 @@ KIRA: [Jira 업데이트] ABC-123의 상태를 변경했습니다.
 
 ## 🔧 문제해결
 
-### OAuth 브라우저가 열리지 않음
-- 방화벽에서 port 8000 차단 확인
-- 웹 인터페이스가 활성화되었는지 확인
-- 로그에서 에러 메시지 확인
+### "MCP 서버 시작 실패"
+- Atlassian MCP 서버가 실행 중인지 확인
+- `ATLASSIAN_MCP_HTTP_URL`이 올바른지 확인
+- KIRA에서 서버에 접근할 수 있는지 확인
+
+### "인증 실패"
+- 개인 액세스 토큰이 올바른지 확인
+- 토큰 만료 여부 확인
+- Atlassian에서 토큰이 활성 상태인지 확인
+
+### "연결 거부됨"
+- 지정된 포트에서 Atlassian MCP 서버가 실행 중인지 확인
+- 방화벽 설정 확인
+- URL 프로토콜(http/https)이 올바른지 확인
+
+### "권한 거부됨"
+- 개인 액세스 토큰 권한 확인
+- 저장소 접근 권한 확인
+- Confluence/Jira에 대한 읽기/쓰기 권한이 있는지 확인
 
 ### "Site URL is invalid"
 - ATLASSIAN_CONFLUENCE_SITE_URL이 올바른지 확인
 - URL 끝에 슬래시(/) 제거
 - 프로토콜(https://) 포함 확인
-
-### "Permission denied"
-- Atlassian 계정 권한 확인
-- Confluence/Jira 접근 권한 확인
-- OAuth 승인이 완료되었는지 확인
 
 ### 특정 Space/Project에 접근 불가
 - 해당 Space/Project의 멤버인지 확인

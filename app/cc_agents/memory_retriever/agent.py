@@ -15,6 +15,7 @@ from claude_agent_sdk import (
 )
 
 from app.config.settings import get_settings
+from app.cc_utils.language_helper import detect_language
 
 
 def create_system_prompt(state_prompt: str, memories_path: str) -> str:
@@ -82,10 +83,22 @@ async def call_memory_retriever(
     base_dir = settings.FILESYSTEM_BASE_DIR or os.getcwd()
     memories_path = os.path.join(base_dir, "memories")
 
+    # Detect language for appropriate messages
+    user_text = message_data.get("user_text", "") if message_data else search_query
+    detected_lang = detect_language(user_text)
+
+    # Language-specific messages
+    no_memory_messages = {
+        "Korean": "관련된 메모리가 없습니다.",
+        "Traditional_Chinese": "沒有相關記憶。",
+        "English": "No relevant memories found."
+    }
+    no_memory_message = no_memory_messages.get(detected_lang, no_memory_messages["English"])
+
     # memories 폴더가 없으면 빈 결과 반환
     if not os.path.exists(memories_path):
         logging.info(f"[MEMORY_RETRIEVER] No memories folder found")
-        return "관련된 메모리가 없습니다."
+        return no_memory_message
 
     # state_prompt 생성
     from app.cc_agents.state_prompt import create_state_prompt
@@ -126,8 +139,8 @@ async def call_memory_retriever(
                     logging.info(f"[MEMORY_RETRIEVER] Result: {result_message[:100]}...")
                     break
 
-            return result_message if result_message else "관련된 메모리가 없습니다."
+            return result_message if result_message else no_memory_message
 
     except Exception as e:
         logging.error(f"[MEMORY_RETRIEVER] Error: {e}")
-        return "관련된 메모리가 없습니다."
+        return no_memory_message

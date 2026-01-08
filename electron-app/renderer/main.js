@@ -33,7 +33,7 @@ function t(key, options) {
 
 function getCurrentLanguage() {
   const saved = localStorage.getItem('kira-language');
-  if (saved && ['en', 'ko'].includes(saved)) return saved;
+  if (saved && ['en', 'ko', 'zh-tw'].includes(saved)) return saved;
   return 'en';
 }
 
@@ -93,6 +93,7 @@ const fields = [
   'GITEA_ENABLED',
   'GITEA_HOST',
   'GITEA_ACCESS_TOKEN',
+  'GITEA_DISALLOWED_TOOLS',
   'MS365_ENABLED',
   'MS365_CLIENT_ID',
   'MS365_TENANT_ID',
@@ -100,6 +101,7 @@ const fields = [
   'ATLASSIAN_CONFLUENCE_SITE_URL',
   'ATLASSIAN_JIRA_SITE_URL',
   'ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID',
+  'ATLASSIAN_MCP_REMOTE_URL',
   'TABLEAU_ENABLED',
   'TABLEAU_SERVER',
   'TABLEAU_SITE_NAME',

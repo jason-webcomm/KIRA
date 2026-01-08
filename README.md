@@ -197,6 +197,15 @@ KIRA uses a multi-agent pipeline where each agent has a specific role. This desi
 | **Proactive Suggester** | Sonnet | ✅ | Generate proactive task suggestions |
 | **Proactive Confirm** | Haiku | ✅ | Request user approval for suggestions |
 
+### Language Support
+
+KIRA supports multiple languages:
+- 🇺🇸 **English** (en)
+- 🇰🇷 **Korean** (ko)
+- 🇹🇼 **Traditional Chinese** (zh-TW)
+
+The Electron app UI and Python server automatically detect the user's language and respond accordingly. Documentation is also available in all three languages.
+
 ### 3-Tier Queue System
 
 KIRA uses a hierarchical queue system to handle concurrent messages efficiently:
@@ -252,8 +261,9 @@ KIRA uses a hierarchical queue system to handle concurrent messages efficiently:
 - Perplexity (web search)
 - DeepL (translation)
 - Outlook (email)
-- Confluence & Jira (Rovo MCP)
+- Confluence & Jira (Server/Data Center only - via Rovo MCP)
 - GitLab (code repository)
+- Gitea (code repository with tool access control)
 - X (Twitter)
 - Clova Speech (transcription, meeting notes)
 - Playwright (browser automation)
@@ -330,6 +340,23 @@ npm run deploy
 - ✅ External communication only with Claude API and enabled MCP servers
 - ✅ config.env file has owner-only read/write permissions
 - ⚠️ Never share API keys or tokens
+
+---
+
+## 📝 Recent Updates
+
+### Traditional Chinese (繁體中文) Support
+- Added full Traditional Chinese language support to the Electron app UI
+- Python server now detects Traditional Chinese text and responds accordingly
+- Voice recognition (STT) supports zh-TW language code
+- Documentation site includes Traditional Chinese version at `/zh-tw/`
+
+### Gitea Integration with Tool Access Control
+- Integrated Gitea MCP server for code repository management
+- Added tool access control via disallowed patterns
+- Configure disallowed tools using comma-separated patterns (e.g., `mcp__gitea__delete_repo,mcp__gitea__delete_release`)
+- Supports wildcard patterns for flexible tool blocking
+- Leave disallowed list empty to allow all Gitea tools (default)
 
 ---
 

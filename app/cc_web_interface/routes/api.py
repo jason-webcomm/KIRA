@@ -4,7 +4,7 @@ General API endpoints
 """
 
 import logging
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 
 from app.cc_web_interface.stt_provider import get_stt_provider
 
@@ -13,9 +13,9 @@ router = APIRouter(prefix="/api", tags=["api"])
 
 
 @router.get("/config")
-async def get_config():
+async def get_config(language: str = Query("Korean", description="Language preference: Korean, Traditional_Chinese, or English")):
     """Return STT Provider configuration"""
-    provider = get_stt_provider()
+    provider = get_stt_provider(language=language)
     return {
         "provider_type": provider.get_provider_type(),
         "config": provider.get_client_config()

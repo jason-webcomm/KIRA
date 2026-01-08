@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     GITEA_ENABLED: bool = False
     GITEA_ACCESS_TOKEN: str = ""
     GITEA_HOST: str = ""
+    GITEA_DISALLOWED_TOOLS: str = ""
 
     # MCP - Microsoft 365 (Lokka)
     MS365_ENABLED: bool = False
@@ -68,6 +69,8 @@ class Settings(BaseSettings):
     JIRA_URL: str = ""
     CONFLUENCE_PERSONAL_TOKEN: str = ""
     CONFLUENCE_URL: str = ""
+    ATLASSIAN_MCP_HTTP_URL: str = ""
+    ATLASSIAN_MCP_REMOTE_URL: str = ""
 
     ANTHROPIC_BASE_URL: str = ""
     ANTHROPIC_API_KEY: str = ""

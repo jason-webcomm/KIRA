@@ -44,6 +44,7 @@ gtag('config', 'G-05X6YL37F9');`],
     ['meta', { property: 'og:image:height', content: '630' }],
     ['meta', { property: 'og:locale', content: 'en_US' }],
     ['meta', { property: 'og:locale:alternate', content: 'ko_KR' }],
+    ['meta', { property: 'og:locale:alternate', content: 'zh_TW' }],
 
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
@@ -206,6 +207,82 @@ gtag('config', 'G-05X6YL37F9');`],
         returnToTopLabel: '맨 위로',
         langMenuLabel: '언어 변경'
       }
+    },
+    'zh-tw': {
+      label: '繁體中文',
+      lang: 'zh-TW',
+      link: '/zh-tw/',
+      themeConfig: {
+        nav: [
+          { text: '首頁', link: '/zh-tw/' },
+          { text: '開始使用', link: '/zh-tw/getting-started' },
+          { text: '設定指南', link: '/zh-tw/setup/' },
+          { text: '功能', link: '/zh-tw/features/' },
+          { text: '故障排除', link: '/zh-tw/troubleshooting' },
+        ],
+        sidebar: {
+          '/zh-tw/setup/': [
+            {
+              text: 'MCP 設定',
+              items: [
+                { text: 'Perplexity 網頁搜尋', link: '/zh-tw/setup/perplexity' },
+                { text: 'DeepL (文件翻譯)', link: '/zh-tw/setup/deepl' },
+                { text: 'GitHub', link: '/zh-tw/setup/github' },
+                { text: 'GitLab', link: '/zh-tw/setup/gitlab' },
+                { text: 'Microsoft 365 (Outlook/OneDrive/SharePoint)', link: '/zh-tw/setup/ms365' },
+                { text: 'Confluence & Jira', link: '/zh-tw/setup/atlassian' },
+                { text: 'Tableau', link: '/zh-tw/setup/tableau' },
+                { text: 'X (Twitter)', link: '/zh-tw/setup/x' },
+                { text: 'Clova Speech (會議紀錄)', link: '/zh-tw/setup/voice' },
+              ]
+            },
+            {
+              text: '進階設定',
+              items: [
+                { text: 'Computer Use', link: '/zh-tw/setup/computer-use' },
+                { text: '網頁介面 (語音輸入)', link: '/zh-tw/setup/web-interface' },
+              ]
+            }
+          ],
+          '/zh-tw/features/': [
+            {
+              text: '核心功能',
+              items: [
+                { text: '聊天', link: '/zh-tw/features/chat' },
+                { text: '任務執行', link: '/zh-tw/features/tasks' },
+                { text: '排程', link: '/zh-tw/features/scheduling' },
+                { text: '記憶系統', link: '/zh-tw/features/memory' },
+              ]
+            },
+            {
+              text: '主動接收頻道',
+              items: [
+                { text: 'Email 監控', link: '/zh-tw/features/email-monitoring' },
+                { text: 'Confluence 追蹤', link: '/zh-tw/features/confluence' },
+                { text: 'Jira 追蹤', link: '/zh-tw/features/jira' },
+              ]
+            },
+            {
+              text: '主動建議',
+              items: [
+                { text: '主動建議', link: '/zh-tw/features/proactive' },
+              ]
+            }
+          ]
+        },
+        outline: {
+          label: '目錄',
+          level: [2, 3]
+        },
+        docFooter: {
+          prev: '上一頁',
+          next: '下一頁'
+        },
+        darkModeSwitchLabel: '主題',
+        sidebarMenuLabel: '選單',
+        returnToTopLabel: '回到頂部',
+        langMenuLabel: '變更語言'
+      }
     }
   },
 
@@ -257,6 +334,23 @@ gtag('config', 'G-05X6YL37F9');`],
                   selectText: '선택',
                   navigateText: '이동',
                   closeText: '닫기'
+                }
+              }
+            }
+          },
+          'zh-tw': {
+            translations: {
+              button: {
+                buttonText: '搜尋',
+                buttonAriaLabel: '搜尋'
+              },
+              modal: {
+                noResultsText: '找不到結果',
+                resetButtonTitle: '重設',
+                footer: {
+                  selectText: '選擇',
+                  navigateText: '導航',
+                  closeText: '關閉'
                 }
               }
             }

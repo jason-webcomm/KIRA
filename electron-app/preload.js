@@ -10,7 +10,7 @@ function loadTranslations() {
   const translations = {};
   const localesPath = path.join(__dirname, 'locales');
 
-  ['en', 'ko'].forEach(lang => {
+  ['en', 'ko', 'zh-tw'].forEach(lang => {
     const filePath = path.join(localesPath, `${lang}.json`);
     try {
       if (fs.existsSync(filePath)) {

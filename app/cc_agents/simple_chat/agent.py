@@ -143,7 +143,12 @@ async def call_simple_chat(
     state_prompt = create_state_prompt(slack_data, message_data)
 
     # 메모리가 있으면 state_prompt에 추가
-    if retrieved_memory and retrieved_memory != "관련된 메모리가 없습니다.":
+    no_memory_messages = [
+        "관련된 메모리가 없습니다.",
+        "沒有相關記憶。",
+        "No relevant memories found."
+    ]
+    if retrieved_memory and retrieved_memory not in no_memory_messages:
         state_prompt += f"\n\n## 관련 메모리\n<retrieved_memory>\n{retrieved_memory}\n</retrieved_memory>"
 
     system_prompt = create_system_prompt(state_prompt)

@@ -6,6 +6,7 @@ Gitea API와 통합하면 KIRA가 코드 저장소를 관리할 수 있습니다
 
 - Gitea 계정 (gitea.com 또는 자체 호스팅)
 - 개인 액세스 토큰
+- HTTP 모드로 실행 중인 Gitea MCP 서버
 
 ---
 
@@ -43,7 +44,37 @@ Gitea API와 통합하면 KIRA가 코드 저장소를 관리할 수 있습니다
 
 ---
 
-## ⚙️ 2단계: KIRA 구성
+## 🌐 2단계: Gitea MCP 서버 시작 (HTTP 모드)
+
+Gitea MCP 서버가 HTTP 모드로 실행 중이어야 KIRA가 연결할 수 있습니다.
+
+### 옵션 A: 로컬에서 실행
+
+1. Gitea MCP 서버 설치:
+```bash
+npm install -g gitea-mcp
+```
+
+2. HTTP 모드로 서버 시작:
+```bash
+gitea-mcp --transport streamable-http --port 8080
+```
+
+서버는 `http://localhost:8080/mcp`에서 사용 가능합니다.
+
+### 옵션 B: Docker로 실행
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e GITEA_ACCESS_TOKEN=<your_token> \
+  gitea/gitea-mcp:latest \
+  --transport streamable-http --port 8080
+```
+
+---
+
+## ⚙️ 3단계: KIRA 구성
 
 ### 1. KIRA 앱 실행
 환경 변수 탭을 엽니다.
@@ -59,6 +90,9 @@ Gitea API와 통합하면 KIRA가 코드 저장소를 관리할 수 있습니다
   - Gitea.com: `https://gitea.com`
   - 자체 호스팅: `https://git.company.com`
 - **GITEA_ACCESS_TOKEN**: 복사한 액세스 토큰
+- **GITEA_MCP_HTTP_URL**: MCP 서버 HTTP URL
+  - 로컬: `http://localhost:8080/mcp`
+  - 원격: `http://your-server:8080/mcp`
 
 ### 5. 설정 저장
 - **"설정 저장"** 버튼 클릭
@@ -66,7 +100,7 @@ Gitea API와 통합하면 KIRA가 코드 저장소를 관리할 수 있습니다
 
 ---
 
-## ✅ 3단계: 테스트
+## ✅ 4단계: 테스트
 
 Slack에서 KIRA에게 물어보세요:
 
@@ -120,15 +154,20 @@ KIRA: [Gitea 쿼리]
 
 ## 🔧 문제 해결
 
+### "MCP 서버 시작 실패"
+- Gitea MCP 서버가 실행 중인지 확인
+- `GITEA_MCP_HTTP_URL`이 올바른지 확인
+- KIRA에서 서버에 접근할 수 있는지 확인
+
 ### "인증 실패"
 - 액세스 토큰이 올바른지 확인
 - 토큰 만료 여부 확인
 - Gitea에서 토큰이 활성 상태인지 확인
 
-### "Host URL이 올바르지 않음"
-- GITEA_HOST가 올바른지 확인
-- 자체 호스팅의 경우 URL이 정확한지 확인
-- 프로토콜 포함(https://) 확인
+### "연결 거부됨"
+- 지정된 포트에서 Gitea MCP 서버가 실행 중인지 확인
+- 방화벽 설정 확인
+- URL 프로토콜(http/https)이 올바른지 확인
 
 ### "권한 거부됨"
 - 액세스 토큰 권한(범위) 확인
@@ -147,6 +186,13 @@ KIRA: [Gitea 쿼리]
 내부 회사 Gitea 서버 사용 시:
 - GITEA_HOST에 회사 Gitea 주소 입력
 - 예: `https://git.company.com`
+
+### MCP 서버 배포
+프로덕션 배포 시:
+- 전용 머신에서 MCP 서버 실행
+- 적절한 SSL 인증서로 HTTPS 사용
+- 필요한 경우 역방 프록시(nginx) 구성
+- 서버 실행 유지를 위한 프로세스 매니저(systemd, PM2) 설정
 
 ### 토큰 관리
 - 명확한 토큰 이름 설정 (`KIRA Bot`)

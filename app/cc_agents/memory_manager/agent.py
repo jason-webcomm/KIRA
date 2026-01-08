@@ -15,6 +15,7 @@ from claude_agent_sdk import (
 )
 
 from app.config.settings import get_settings
+from app.cc_utils.language_helper import detect_language
 
 
 def create_system_prompt(state_prompt: str, memories_path: str) -> str:
@@ -95,6 +96,24 @@ async def call_memory_manager(
     # memories 폴더가 없으면 생성
     os.makedirs(memories_path, exist_ok=True)
 
+    # Detect language for appropriate messages
+    detected_lang = detect_language(query)
+
+    # Language-specific messages
+    error_messages = {
+        "Korean": "메모리 작업을 완료할 수 없었습니다.",
+        "Traditional_Chinese": "無法完成記憶操作。",
+        "English": "Could not complete memory operation."
+    }
+    error_with_detail_messages = {
+        "Korean": "메모리 작업 중 오류가 발생했습니다:",
+        "Traditional_Chinese": "記憶操作時發生錯誤：",
+        "English": "Error during memory operation:"
+    }
+
+    error_message = error_messages.get(detected_lang, error_messages["English"])
+    error_with_detail_message = error_with_detail_messages.get(detected_lang, error_with_detail_messages["English"])
+
     # state_prompt 생성
     from app.cc_agents.state_prompt import create_state_prompt
     state_prompt = create_state_prompt()
@@ -135,8 +154,8 @@ async def call_memory_manager(
                     logging.info(f"[MEMORY_MANAGER] Result: {result_message[:100]}...")
                     break
 
-            return result_message if result_message else "메모리 작업을 완료할 수 없었습니다."
+            return result_message if result_message else error_message
 
     except Exception as e:
         logging.error(f"[MEMORY_MANAGER] Error: {e}")
-        return f"메모리 작업 중 오류가 발생했습니다: {str(e)}"
+        return f"{error_with_detail_message} {str(e)}"

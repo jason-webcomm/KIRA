@@ -1,0 +1,206 @@
+{
+  "app": {
+    "title": "KIRA"
+  },
+  "nav": {
+    "start": "開始活動",
+    "settings": "環境變數設定",
+    "model": "模型設定"
+  },
+  "landing": {
+    "preparing": "{{botName}} 正在準備工作。",
+    "startButton": "開始",
+    "forSlack": "for Slack"
+  },
+  "server": {
+    "title": "伺服器日誌",
+    "subtitle": "即時伺服器活動",
+    "stop": "停止伺服器",
+    "stopping": "停止中...",
+    "starting": "啟動中...",
+    "statusRunning": "🟢 伺服器執行中",
+    "statusStopped": "⚫ 伺服器已停止",
+    "waitingEnter": "⌨️  等待按下 ENTER 鍵..."
+  },
+  "settings": {
+    "title": "環境變數設定",
+    "subtitle": "Slack Bot 環境設定",
+    "save": "儲存",
+    "saved": "✓ 設定已成功儲存！",
+    "saveFailed": "✗ 儲存設定失敗",
+    "sections": {
+      "slackConnection": "必須設定 - Slack 連動",
+      "botInfo": "必須設定 - Bot 資訊",
+      "aiModel": "AI 模型設定",
+      "mcp": "MCP 設定",
+      "remoteMcp": "Remote MCP 設定",
+      "computerUse": "Computer Use",
+      "webServer": "網頁伺服器 / 語音輸入頻道",
+      "activeChannels": "主動接收頻道",
+      "proactive": "主動建議功能",
+      "debug": "除錯"
+    },
+    "beta": "beta"
+  },
+  "slack": {
+    "botToken": "Slack Bot Token",
+    "botTokenHint": "Bot User OAuth Token (以 xoxb- 開頭)",
+    "appToken": "Slack App Token",
+    "appTokenHint": "App-Level Token (以 xapp- 開頭)",
+    "signingSecret": "Slack Signing Secret",
+    "signingSecretHint": "App Credentials 的 Signing Secret",
+    "teamId": "Slack Team ID",
+    "teamIdHint": "工作區 Team ID"
+  },
+  "bot": {
+    "name": "Bot 名稱",
+    "email": "Bot 電子郵件",
+    "organization": "Bot 組織",
+    "organizationHint": "Bot 所屬的組織結構",
+    "team": "Bot 團隊",
+    "authorizedUsersEn": "授權使用者 (英文)",
+    "authorizedUsersKr": "授權使用者 (韓文)",
+    "commaSeparated": "以逗號分隔",
+    "role": "職位/角色",
+    "roleHint": "描述 Bot 的職位和主要職責",
+    "dataPath": "資料儲存路徑",
+    "dataPathHint": "檔案和資料儲存位置",
+    "openInFinder": "在 Finder 中開啟"
+  },
+  "mcp": {
+    "perplexity": "Perplexity",
+    "deepl": "DeepL",
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "ms365": "Microsoft 365 (Outlook/OneDrive/SharePoint)",
+    "atlassian": "Atlassian (Jira/Confluence)",
+    "tableau": "Tableau",
+    "x": "X (Twitter)",
+    "clova": "Clova Speech",
+    "apiKey": "API Key",
+    "accessToken": "Access Token",
+    "personalAccessToken": "Personal Access Token",
+    "apiUrl": "API URL",
+    "clientId": "Client ID",
+    "tenantId": "Tenant ID",
+    "clientSecret": "Client Secret",
+    "siteUrl": "Site URL",
+    "serverUrl": "Server URL",
+    "siteName": "Site Name",
+    "patName": "PAT Name",
+    "patValue": "PAT Value",
+    "invokeUrl": "Invoke URL",
+    "secretKey": "Secret Key",
+    "oauth2ClientId": "OAuth2 Client ID",
+    "oauth2ClientSecret": "OAuth2 Client Secret"
+  },
+  "hints": {
+    "githubPat": "GitHub Settings → Developer settings → Personal access tokens",
+    "azureApp": "在 portal.azure.com 註冊應用程式後取得",
+    "tableauPat": "Tableau Server → My Account Settings → Personal Access Tokens",
+    "xApi": "developer.twitter.com → Projects & Apps → Keys and tokens",
+    "lokkaOauth": "MS365 MCP 會在首次執行時自動開啟瀏覽器進行 OAuth 認證。",
+    "atlassianOauth": "Atlassian MCP 會在首次執行時自動開啟瀏覽器進行 OAuth 認證。",
+    "tableauDefaultSite": "如果是 Default site 請留空",
+    "confluenceDefaultPage": "當使用者提出「幫我放到 Wiki」請求時使用的預設頁面"
+  },
+  "notices": {
+    "webInterfaceRequired": "需要網頁介面：",
+    "xRequiresWeb": "要使用 X (Twitter) 功能，必須在下方的「網頁伺服器/語音輸入頻道」區段中啟用 Web Interface。",
+    "clovaRequiresWeb": "要使用 Clova Speech 功能，必須在下方的「網頁伺服器/語音輸入頻道」區段中啟用 Web Interface。"
+  },
+  "computerUse": {
+    "chrome": "Chrome",
+    "chromeDesc": "Playwright 自動化的 Chrome 設定檔設定",
+    "alwaysProfile": "總是開啟設定檔設定",
+    "alwaysProfileDesc": "每次開啟瀏覽器以進行額外的登入設定"
+  },
+  "webInterface": {
+    "title": "Web Interface",
+    "info": "網頁伺服器資訊：",
+    "infoDesc": "在 port 8000 以 HTTPS 執行。X(Twitter)、Clova Speech 和語音輸入功能所需。",
+    "authProvider": "驗證方式",
+    "authProviderHint": "選擇存取網頁介面時的登入方式",
+    "authMicrosoft": "Microsoft 365",
+    "authSlack": "Slack",
+    "baseUrl": "Base URL (外部連線用)",
+    "baseUrlHint": "從外部連線時使用的 URL (選用)",
+    "slackClientId": "Slack Client ID",
+    "slackClientIdHint": "Slack App 的 Basic Information > App Credentials > Client ID",
+    "slackClientSecret": "Slack Client Secret",
+    "slackClientSecretHint": "Slack App 的 Basic Information > App Credentials > Client Secret",
+    "ms365ClientId": "Microsoft 365 Client ID",
+    "ms365ClientIdHint": "Azure App Registration 的 Client ID",
+    "ms365ClientSecret": "Microsoft 365 Client Secret",
+    "ms365ClientSecretHint": "Azure App Registration 的 Client Secret",
+    "ms365TenantId": "Microsoft 365 Tenant ID",
+    "ms365TenantIdHint": "Azure AD 的 Tenant ID"
+  },
+  "channels": {
+    "outlook": "Outlook",
+    "outlookWarning": "請先啟用 MS365 MCP",
+    "outlookInfo": "從收件匣擷取重要工作並自動執行",
+    "confluence": "Confluence",
+    "confluenceWarning": "請先啟用 Atlassian MCP",
+    "confluenceInfo": "偵測更新的頁面並將重要內容儲存到記憶中",
+    "jira": "Jira",
+    "jiraWarning": "請先啟用 Atlassian MCP",
+    "jiraInfo": "檢查指派的問題並自動執行必要工作",
+    "checkInterval": "檢查間隔 (分鐘)",
+    "checkIntervalHint": "收件匣檢查頻率",
+    "jiraCheckIntervalHint": "指派問題檢查頻率",
+    "checkHours": "時間範圍 (小時)",
+    "checkHoursHint": "只檢查最近 N 小時內更新的頁面"
+  },
+  "suggester": {
+    "title": "Dynamic Suggester",
+    "interval": "建議間隔 (分鐘)"
+  },
+  "dialogs": {
+    "uvRequired": "需要安裝 uv",
+    "uvMessage": "需要 Python 套件管理器 (uv)。\n要自動安裝嗎？",
+    "autoInstall": "自動安裝",
+    "cancel": "取消",
+    "installComplete": "安裝完成",
+    "uvInstallSuccess": "uv 已成功安裝。\n現在可以啟動伺服器了。",
+    "installFailed": "安裝失敗",
+    "uvInstallFailed": "uv 安裝失敗。\n手動安裝：curl -LsSf https://astral.sh/uv/install.sh | sh",
+    "updateAvailable": "有可用的更新",
+    "updateAvailableMessage": "新版本 {{version}} 已發布。\n將在背景開始下載。",
+    "ok": "確定",
+    "updateReady": "更新準備就緒",
+    "updateReadyMessage": "版本 {{version}} 已下載完成。\n要立即重新啟動以套用更新嗎？",
+    "restartNow": "立即重新啟動",
+    "later": "稍後"
+  },
+  "language": {
+    "label": "語言",
+    "ko": "한국어",
+    "en": "English"
+  },
+  "remoteMcp": {
+    "info": "可以新增自訂 Remote MCP 伺服器。每個伺服器將以 mcp__NAME__* 格式的工具使用。",
+    "addServer": "新增伺服器",
+    "name": "伺服器名稱",
+    "nameHint": "僅使用小寫英文字母、數字和連字號 (例如：myserver)",
+    "url": "伺服器 URL",
+    "instruction": "使用說明",
+    "instructionPlaceholder": "描述何時以及如何使用此 MCP",
+    "toolHint": "輸入名稱後會顯示工具格式",
+    "toolHintFormat": "在以下情況請務必使用 mcp__{name}__*：{instruction}"
+  },
+  "debug": {
+    "slackMessages": "錯誤時傳送 Slack 訊息",
+    "slackMessagesDesc": "當 Agent 發生錯誤時傳送通知訊息到 Slack"
+  },
+  "aiModel": {
+    "simple": "簡單任務 (Bot 呼叫偵測、分類等)",
+    "moderate": "中等任務 (記憶管理、摘要等)",
+    "complex": "複雜任務 (核心工作執行)"
+  },
+  "model": {
+    "title": "模型設定",
+    "subtitle": "AI 模型選擇",
+    "haikuWarning": "⚠️ 由於 Claude API 問題，目前無法選擇 Haiku 模型。<a href=\"https://github.com/anthropics/claude-code/issues/15015\" target=\"_blank\">相關問題</a>"
+  }
+}

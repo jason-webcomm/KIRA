@@ -8,6 +8,7 @@
 import json
 import logging
 import os
+import re
 
 from claude_agent_sdk import (
     ClaudeAgentOptions,
@@ -25,6 +26,9 @@ from app.cc_tools.deepl.deepl_tools import create_deepl_tools_server
 from app.cc_tools.files.files_tools import create_files_mcp_server
 from app.config.settings import get_settings, Settings
 from app.cc_agents.state_prompt import create_state_prompt
+from app.cc_utils.language_helper import detect_language
+
+logger = logging.getLogger(__name__)
 
 
 def build_mcp_servers_dict(settings: Settings) -> dict:
@@ -100,13 +104,14 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
 
     # MCP 설정 - Gitea
     if settings.GITEA_ENABLED:
-        logger.info(f"[MCP_CONFIG] Gitea MCP enabled: HOST={settings.GITEA_HOST}, TOKEN={'SET' if settings.GITEA_ACCESS_TOKEN else 'NOT SET'}")
+        host = settings.GITEA_HOST or "https://gitea.com"
+        logger.info(f"[MCP_CONFIG] Gitea MCP enabled (stdio mode): HOST={host}, TOKEN={'SET' if settings.GITEA_ACCESS_TOKEN else 'NOT SET'}, DISALLOWED_TOOLS={settings.GITEA_DISALLOWED_TOOLS or 'NONE'}")
         mcp_servers["gitea"] = {
-            "command": "npx",
-            "args": ["-y", "gitea-mcp", "-t", "stdio", "--host", settings.GITEA_HOST or "https://gitea.com"],
+            "command": "gitea-mcp",
+            "args": ["-t", "stdio", "--host", host],
             "env": {
-                "GITEA_ACCESS_TOKEN": settings.GITEA_ACCESS_TOKEN,
-            },
+                "GITEA_ACCESS_TOKEN": settings.GITEA_ACCESS_TOKEN
+            }
         }
     else:
         logger.info("[MCP_CONFIG] Gitea MCP disabled")
@@ -125,19 +130,25 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
 
     # MCP 설정 - Atlassian Data Center (Confluence, Jira)
     if settings.ATLASSIAN_ENABLED:
-        logger.info(f"[MCP_CONFIG] Atlassian MCP enabled: CONFLUENCE_URL={settings.CONFLUENCE_URL}, CONFLUENCE_TOKEN={'SET' if settings.CONFLUENCE_PERSONAL_TOKEN else 'NOT SET'}, JIRA_URL={settings.JIRA_URL}, JIRA_TOKEN={'SET' if settings.JIRA_PERSONAL_TOKEN else 'NOT SET'}")
-        mcp_servers["atlassian"] = {
-            "command": "npx",
-            "args": ["mcp-cache", "uvx", "-y", "mcp-atlassian"],
-            "env": {
-                "CONFLUENCE_URL": settings.CONFLUENCE_URL,
-                "CONFLUENCE_PERSONAL_TOKEN": settings.CONFLUENCE_PERSONAL_TOKEN,
-                "CONFLUENCE_SSL_VERIFY": "false",
-                "JIRA_URL": settings.JIRA_URL,
-                "JIRA_PERSONAL_TOKEN": settings.JIRA_PERSONAL_TOKEN,
-                "JIRA_SSL_VERIFY": "false",
-            },
-        }
+        logger.info(f"[MCP_CONFIG] Atlassian MCP enabled (remote mode)")
+        env_vars = {}
+        if settings.JIRA_PERSONAL_TOKEN and settings.JIRA_URL:
+            env_vars["JIRA_URL"] = settings.JIRA_URL
+            env_vars["JIRA_PERSONAL_TOKEN"] = settings.JIRA_PERSONAL_TOKEN
+            env_vars["JIRA_SSL_VERIFY"] = "false"
+        if settings.CONFLUENCE_PERSONAL_TOKEN and settings.CONFLUENCE_URL:
+            env_vars["CONFLUENCE_URL"] = settings.CONFLUENCE_URL
+            env_vars["CONFLUENCE_PERSONAL_TOKEN"] = settings.CONFLUENCE_PERSONAL_TOKEN
+            env_vars["CONFLUENCE_SSL_VERIFY"] = "false"
+
+        if env_vars and settings.ATLASSIAN_MCP_REMOTE_URL:
+            mcp_servers["atlassian"] = {
+                "command": "npx",
+                "args": ["mcp-cache", "npx", "-y", "mcp-remote", settings.ATLASSIAN_MCP_REMOTE_URL],
+                "env": env_vars
+            }
+        else:
+            logger.warning("[MCP_CONFIG] Atlassian MCP enabled but no JIRA/CONFLUENCE credentials or ATLASSIAN_MCP_REMOTE_URL set, skipping")
     else:
         logger.info("[MCP_CONFIG] Atlassian MCP disabled")
 
@@ -265,9 +276,14 @@ def build_tool_usage_rules(settings: Settings) -> str:
 
     # MCP 설정 - Gitea
     if settings.GITEA_ENABLED:
-        conditional_rules.append(
-            "- Gitea 링크(예: https://gitea.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitea__*` 도구를 사용하세요."
-        )
+        if settings.GITEA_DISALLOWED_TOOLS:
+            conditional_rules.append(
+                "- Gitea 작업은 `mcp__gitea__*` 도구를 사용하세요. (금지된 패턴: " + settings.GITEA_DISALLOWED_TOOLS + ")"
+            )
+        else:
+            conditional_rules.append(
+                "- Gitea 링크(예: https://gitea.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitea__*` 도구를 사용하세요."
+            )
 
     # MCP - Microsoft 365 (Lokka)
     if settings.MS365_ENABLED:
@@ -496,7 +512,12 @@ async def call_operator_agent(
     state_prompt = create_state_prompt(slack_data, message_data)
 
     # 메모리가 있으면 state_prompt에 추가
-    if retrieved_memory and retrieved_memory != "관련된 메모리가 없습니다.":
+    no_memory_messages = [
+        "관련된 메모리가 없습니다.",
+        "沒有相關記憶。",
+        "No relevant memories found."
+    ]
+    if retrieved_memory and retrieved_memory not in no_memory_messages:
         state_prompt += f"\n\n## 관련 메모리\n<retrieved_memory>\n{retrieved_memory}\n</retrieved_memory>"
 
     system_prompt = create_system_prompt(state_prompt)
@@ -506,21 +527,113 @@ async def call_operator_agent(
     # 설정에 따라 활성화된 MCP 서버만 로드
     mcp_servers = build_mcp_servers_dict(settings)
 
+    # stderr 콜백 함수 - MCP 서버 오류 로깅
+    def stderr_callback(stderr_line: str) -> None:
+        logger.error(f"[MCP STDERR] {stderr_line}")
+
+    # Handle Gitea tools (always allowed by default)
+    if settings.GITEA_ENABLED:
+        logger.info("[GITEA] All Gitea tools allowed by default")
+
+    # Build disallowed_tools list
+    disallowed_tools_list = [
+        "Bash(curl:*)",
+        "Read(./.env)",
+        "Read(./credential.json)",
+        "mcp__tableau__get-view-image",
+    ]
+
+    # Add Gitea disallowed patterns with wildcard expansion
+    if settings.GITEA_ENABLED and settings.GITEA_DISALLOWED_TOOLS:
+        disallowed_patterns = [p.strip() for p in settings.GITEA_DISALLOWED_TOOLS.split(",")]
+
+        # Expand wildcard patterns to actual tool names
+        # Known Gitea tools based on MCP server definition
+        gitea_tools = [
+            # User
+            "mcp__gitea__get_my_user_info",
+            "mcp__gitea__get_user_orgs",
+
+            # Repository
+            "mcp__gitea__create_repo",
+            "mcp__gitea__fork_repo",
+            "mcp__gitea__list_my_repos",
+            "mcp__gitea__list_repo_commits",
+            "mcp__gitea__search_repos",
+            "mcp__gitea__search_users",
+            "mcp__gitea__search_org_teams",
+
+            # Branch
+            "mcp__gitea__create_branch",
+            "mcp__gitea__delete_branch",
+            "mcp__gitea__list_branches",
+
+            # Release
+            "mcp__gitea__create_release",
+            "mcp__gitea__delete_release",
+            "mcp__gitea__get_release",
+            "mcp__gitea__get_latest_release",
+            "mcp__gitea__list_releases",
+
+            # Tag
+            "mcp__gitea__create_tag",
+            "mcp__gitea__delete_tag",
+            "mcp__gitea__get_tag",
+            "mcp__gitea__list_tags",
+
+            # File
+            "mcp__gitea__create_file",
+            "mcp__gitea__update_file",
+            "mcp__gitea__delete_file",
+            "mcp__gitea__get_file_content",
+            "mcp__gitea__get_dir_content",
+
+            # Issue
+            "mcp__gitea__create_issue",
+            "mcp__gitea__edit_issue",
+            "mcp__gitea__get_issue_by_index",
+            "mcp__gitea__list_repo_issues",
+            "mcp__gitea__create_issue_comment",
+            "mcp__gitea__edit_issue_comment",
+            "mcp__gitea__get_issue_comments_by_index",
+
+            # Pull Request
+            "mcp__gitea__create_pull_request",
+            "mcp__gitea__get_pull_request_by_index",
+            "mcp__gitea__list_repo_pull_requests",
+
+            # Misc
+            "mcp__gitea__get_gitea_mcp_server_version"
+        ]
+
+        expanded_tools = set()
+
+        for pattern in disallowed_patterns:
+            if "*" in pattern:
+                # Convert wildcard to regex pattern with proper escaping
+                regex = "^" + re.escape(pattern).replace("\\*", ".*") + "$"
+                for tool in gitea_tools:
+                    if re.fullmatch(regex, tool):
+                        expanded_tools.add(tool)
+            else:
+                expanded_tools.add(pattern)
+
+        disallowed_tools_list.extend(expanded_tools)
+        logger.info(f"[GITEA_DISALLOWED] Applied {len(disallowed_patterns)} patterns → {len(expanded_tools)} exact tools disallowed")
+        if expanded_tools:
+            logger.debug(f"[GITEA_DISALLOWED] Disallowed tools: {sorted(expanded_tools)}")
+
     options = ClaudeAgentOptions(
         mcp_servers=mcp_servers,
         system_prompt=system_prompt,
         model=settings.MODEL_FOR_COMPLEX,
         permission_mode="bypassPermissions",
         allowed_tools=["*"],
-        disallowed_tools=[
-            "Bash(curl:*)",
-            "Read(./.env)",
-            "Read(./credential.json)",
-            "mcp__tableau__get-view-image",
-        ],
+        disallowed_tools=disallowed_tools_list,
         setting_sources=["project"],
         cwd=os.getcwd(),
         max_buffer_size=10 * 1024 * 1024,
+        stderr=stderr_callback,
     )
 
     # 세션 아이디 설정
