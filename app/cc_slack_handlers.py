@@ -191,6 +191,14 @@ async def _process_message_logic(message, client):
                 "알겠어요. 처리하겠습니다.",
                 "확인했습니다. 바로 진행할게요."
             ]
+        elif lang == "Traditional Chinese":
+            approval_messages = [
+                "收到！我會處理。",
+                "好的，我馬上確認。",
+                "好的，我會進行。",
+                "了解，我會處理。",
+                "已確認，我馬上開始。"
+            ]
         else:
             approval_messages = [
                 "Got it! I'll take care of it.",
@@ -317,6 +325,14 @@ Be sure to include **guidelines** and information (channel_id, user_id, user_nam
                 "급한 일 처리 중이라 시간이 좀 걸릴 것 같아요.",
                 "지금은 다른 작업 중이라 나중에 확인하고 답변드릴게요.",
                 "업무 중이라 바로 답변이 어려울 것 같습니다. 조금만 기다려주세요."
+            ]
+        elif lang == "Traditional Chinese":
+            busy_messages = [
+                "現在有急務，稍後回覆。",
+                "正在處理團隊工作，無法回覆，抱歉。",
+                "正在處理緊急事務，可能需要一點時間。",
+                "正在處理其他工作，稍後確認再回覆。",
+                "正在工作中，無法立即回覆，請稍候。"
             ]
         else:
             busy_messages = [

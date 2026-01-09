@@ -307,6 +307,7 @@ function setupClaudeCLI(env) {
   const possiblePaths = [
     '/usr/local/bin/claude',                                   // npm global default
     '/opt/homebrew/bin/claude',                                // Homebrew on Apple Silicon
+    path.join(os.homedir(), '.local/bin/claude'),              // User local bin
     path.join(os.homedir(), '.npm-global/bin/claude'),         // User npm global
     path.join(os.homedir(), '.nvm/versions/node', 'v*/bin/claude'),  // nvm pattern
   ];
@@ -704,7 +705,7 @@ function registerIPCHandlers() {
       'MCP 설정 - GitLab': ['GITLAB_ENABLED', 'GITLAB_API_URL', 'GITLAB_PERSONAL_ACCESS_TOKEN'],
       'MCP 설정 - Gitea': ['GITEA_ENABLED', 'GITEA_HOST', 'GITEA_ACCESS_TOKEN', 'GITEA_DISALLOWED_TOOLS'],
       'MCP 설정 - Microsoft 365 (Lokka)': ['MS365_ENABLED', 'MS365_CLIENT_ID', 'MS365_TENANT_ID'],
-      'MCP 설정 - Atlassian Rovo': ['ATLASSIAN_ENABLED', 'ATLASSIAN_CONFLUENCE_SITE_URL', 'ATLASSIAN_JIRA_SITE_URL', 'ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID', 'ATLASSIAN_MCP_REMOTE_URL'],
+      'MCP 설정 - Atlassian Rovo': ['ATLASSIAN_ENABLED', 'ATLASSIAN_CONFLUENCE_SITE_URL', 'ATLASSIAN_JIRA_SITE_URL', 'ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID', 'ATLASSIAN_MCP_REMOTE_URL', 'JIRA_URL', 'JIRA_PERSONAL_TOKEN', 'CONFLUENCE_URL', 'CONFLUENCE_PERSONAL_TOKEN'],
       'MCP 설정 - Tableau': ['TABLEAU_ENABLED', 'TABLEAU_SERVER', 'TABLEAU_SITE_NAME', 'TABLEAU_PAT_NAME', 'TABLEAU_PAT_VALUE'],
       'MCP 설정 - X (Twitter)': ['X_ENABLED', 'X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_TOKEN_SECRET', 'X_OAUTH2_CLIENT_ID', 'X_OAUTH2_CLIENT_SECRET'],
       'MCP 설정 - Clova Speech': ['CLOVA_ENABLED', 'CLOVA_INVOKE_URL', 'CLOVA_SECRET_KEY'],

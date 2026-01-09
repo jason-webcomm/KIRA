@@ -90,7 +90,7 @@ async def call_memory_retriever(
     # Language-specific messages
     no_memory_messages = {
         "Korean": "관련된 메모리가 없습니다.",
-        "Traditional_Chinese": "沒有相關記憶。",
+        "Traditional Chinese": "沒有相關記憶。",
         "English": "No relevant memories found."
     }
     no_memory_message = no_memory_messages.get(detected_lang, no_memory_messages["English"])

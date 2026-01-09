@@ -102,12 +102,12 @@ async def call_memory_manager(
     # Language-specific messages
     error_messages = {
         "Korean": "메모리 작업을 완료할 수 없었습니다.",
-        "Traditional_Chinese": "無法完成記憶操作。",
+        "Traditional Chinese": "無法完成記憶操作。",
         "English": "Could not complete memory operation."
     }
     error_with_detail_messages = {
         "Korean": "메모리 작업 중 오류가 발생했습니다:",
-        "Traditional_Chinese": "記憶操作時發生錯誤：",
+        "Traditional Chinese": "記憶操作時發生錯誤：",
         "English": "Error during memory operation:"
     }
 

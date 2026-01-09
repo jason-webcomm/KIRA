@@ -93,11 +93,19 @@ def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optiona
     user_text = message_data.get("user_text", "") if message_data else ""
     response_language = detect_language(user_text)
 
+    # 根據檢測到的語言提供更明確的指示
+    if response_language == "Traditional Chinese":
+        response_instruction = "Traditional Chinese (繁體中文)"
+    elif response_language == "Korean":
+        response_instruction = "Korean (한국어)"
+    else:
+        response_instruction = "English"
+
     state_prompt = f"""
 ## RESPONSE LANGUAGE
-You MUST respond in {response_language}. This is a critical requirement.
+You MUST respond in {response_instruction}. This is a critical requirement.
 
-## 작업을 수행하기 위한 상태 정보:
+## 作業執行所需的狀態資訊:
 <state_data>
 {chr(10).join(sections)}
 
