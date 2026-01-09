@@ -65,7 +65,9 @@
     "roleHint": "Describe the bot's role and main responsibilities",
     "dataPath": "Data Storage Path",
     "dataPathHint": "Location for files and data storage",
-    "openInFinder": "Open in Finder"
+    "openInFinder": "Open in Finder",
+    "responseLanguage": "Response Language (Optional)",
+    "responseLanguageHint": "Leave empty for auto-detection from user input"
   },
   "mcp": {
     "perplexity": "Perplexity",

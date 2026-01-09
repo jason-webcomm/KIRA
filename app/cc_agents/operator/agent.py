@@ -366,8 +366,34 @@ async def save_to_memory(
         channel_name = channel_info.get("channel_name", "unknown")
         channel_type = channel_info.get("channel_type", "unknown")
 
-        memory_query = f"""다음은 방금 완료된 Slack 대화 내용입니다. 다음 대화에서 참고할 만한 정보가 있다면 저장하세요.
-        
+        # Detect language for appropriate memory query
+        detected_lang = detect_language(query)
+
+        # Language-specific memory queries
+        if detected_lang == "Traditional Chinese":
+            memory_query = f"""以下是剛完成的 Slack 對話內容。請保存對未來對話有用的資訊。
+
+**頻道:**
+- ID: {channel_id}
+- 名稱: {channel_name}
+- 類型: {channel_type}
+
+**使用者:**
+- 名稱: {message_data['user_name']}
+- ID: {message_data['user_id']}
+
+**請求:**
+{query}
+
+**作業處理記錄:**
+{final_message}
+
+請使用 `slack-memory-store` skill 將此資訊分類到適當的類別並保存。
+請務必保存作業的成功/失敗案例。
+與團隊同事相關的事項請務必保存。"""
+        elif detected_lang == "Korean":
+            memory_query = f"""다음은 방금 완료된 Slack 대화 내용입니다. 다음 대화에서 참고할 만한 정보가 있다면 저장하세요.
+
 **채널:**
 - ID: {channel_id}
 - 이름: {channel_name}
@@ -385,8 +411,28 @@ async def save_to_memory(
 
 `slack-memory-store` skill을 사용해서 이 정보를 적절한 카테고리에 분류하고 저장하세요.
 반드시 작업의 성공/실패 사례를 저장하세요.
-소속 팀 동료와 관련된 사항은 반드시 저장합니다.
-"""
+소속 팀 동료와 관련된 사항은 반드시 저장합니다."""
+        else:
+            memory_query = f"""The following is a completed Slack conversation. Please save any information that would be useful for future conversations.
+
+**Channel:**
+- ID: {channel_id}
+- Name: {channel_name}
+- Type: {channel_type}
+
+**User:**
+- Name: {message_data['user_name']}
+- ID: {message_data['user_id']}
+
+**Request:**
+{query}
+
+**Work Processing History:**
+{final_message}
+
+Use the `slack-memory-store` skill to categorize and save this information.
+Be sure to save success/failure cases of the work.
+Matters related to team colleagues must be saved."""
 
         # 메모리 큐에 작업 추가 (순차 처리됨)
         await enqueue_memory_job({"memory_query": memory_query})
@@ -433,7 +479,7 @@ def create_system_prompt(state_prompt: str) -> str:
 ## 핵심 행동 원칙
 <important_actions>
 1. state_data의 "관련 메모리" 섹션을 확인하세요. 전임 에이전트가 요청에 필요한 메모리를 정리했습니다.
-2. 반드시 `mcp__slack__answer`도구를 최소 1번 이상 호출합니다.
+2. 반드시 `mcp__slack__answer`도구를 최소 1번 이상 호출합니다. **CRITICAL: You MUST call the `mcp__slack__answer` tool at least once to send your response to Slack. This is mandatory.**
 3. 요청이 불분명하거나 작업이 불가하거나 선택지를 제안할 때도 `mcp__slack__answer`도구로 응답하세요.
 4. 작업 실패 시에도 `mcp__slack__answer`로 실패 원인과 대안을 제시하세요.
 5. 파일 작업 경로:

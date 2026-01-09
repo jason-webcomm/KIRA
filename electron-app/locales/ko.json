@@ -65,7 +65,9 @@
     "roleHint": "봇의 직군과 주요 역할을 설명하세요",
     "dataPath": "데이터 저장 경로",
     "dataPathHint": "파일 및 데이터 저장 위치",
-    "openInFinder": "Finder에서 열기"
+    "openInFinder": "Finder에서 열기",
+    "responseLanguage": "응답 언어 (선택 사항)",
+    "responseLanguageHint": "비워두면 사용자 입력에서 자동으로 감지합니다"
   },
   "mcp": {
     "perplexity": "Perplexity",

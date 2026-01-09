@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     BOT_ROLE: str = ""
     FILESYSTEM_BASE_DIR: str = ""
 
+    # Response language setting (Korean, Traditional Chinese, or English)
+    # If empty, language will be auto-detected from user input
+    RESPONSE_LANGUAGE_SETTING: str = ""
+
     # MCP - Perplexity
     PERPLEXITY_ENABLED: bool = True
     PERPLEXITY_API_KEY: str = ""

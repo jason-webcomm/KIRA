@@ -65,7 +65,9 @@
     "roleHint": "描述 Bot 的職位和主要職責",
     "dataPath": "資料儲存路徑",
     "dataPathHint": "檔案和資料儲存位置",
-    "openInFinder": "在 Finder 中開啟"
+    "openInFinder": "在 Finder 中開啟",
+    "responseLanguage": "回應語言（選填）",
+    "responseLanguageHint": "留空則根據使用者輸入自動檢測"
   },
   "mcp": {
     "perplexity": "Perplexity",
