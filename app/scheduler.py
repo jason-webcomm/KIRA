@@ -109,6 +109,7 @@ async def reload_schedules_from_file():
                 "user": schedule.get("user"),
                 "text": schedule.get("text"),
                 "channel": schedule.get("channel"),
+                "is_scheduled": True,  # Mark as scheduled message to bypass authorization
             }
             schedule_type = schedule.get("schedule_type")
             schedule_value = schedule.get("schedule_value")

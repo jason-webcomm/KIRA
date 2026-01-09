@@ -301,7 +301,9 @@ Be sure to include **guidelines** and information (channel_id, user_id, user_nam
         return
 
     # Authorization check: Only process authorized users (check for new requests only)
-    if not is_authorized_user(user_name):
+    # Skip authorization check for scheduled messages
+    is_scheduled_message = message.get("is_scheduled", False)
+    if not is_authorized_user(user_name) and not is_scheduled_message:
         logging.info(f"[UNAUTHORIZED] User '{user_name}'({user_id}) is not authorized, skipping message")
 
         # Calculate thread_ts based on channel_type
