@@ -56,8 +56,8 @@ def create_system_prompt(state_prompt: str) -> str:
      * **channel_id**: state_data.current_message.channel_id
      * **user_id**: state_data.current_message.user_id
      * **user_name**: state_data.current_message.user_name
-     * **confirm_message**: 사용자에게 보여줄 질문. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "철수님, 예전에 도와드린 적 있는데 도와드릴까요?" / English: "Hi John, I helped with this before. Would you like me to assist?")
-     * **original_request_text**: 승인 시 실행할 명령. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "{bot_name}님, [사용자의 요청]" / English: "{bot_name}, [user's request]")
+     * **confirm_message**: 사용자에게 보여줄 질문. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "철수님, 예전에 도와드린 적 있는데 도와드릴까요?" / Traditional Chinese: "小明，我之前幫過你類似的問題，需要我協助嗎？" / English: "Hi John, I helped with this before. Would you like me to assist?")
+     * **original_request_text**: 승인 시 실행할 명령. 반드시 RESPONSE LANGUAGE에 맞춰 작성 (Korean: "{bot_name}님, [사용자의 요청]" / Traditional Chinese: "{bot_name}，[使用者的請求]" / English: "{bot_name}, [user's request]")
      * **message_ts**: state_data.current_message.message_ts (선택, 스레드 생성용)
      * **thread_ts**: state_data.current_message.thread_ts (선택)
    - 도구 호출 후 "true" 반환
@@ -69,7 +69,7 @@ def create_system_prompt(state_prompt: str) -> str:
 <request_confirmation_guide>
 1. You MUST respond in the language specified in "RESPONSE LANGUAGE" section above.
 2. 채널과 유저에 대한 답변 지침이 있으면 해당 지침에 따라 응답하세요.
-3. 반드시 사용자 이름으로 시작하세요 (Korean: "철수님," / English: "Hi John,").
+3. 반드시 사용자 이름으로 시작하세요 (Korean: "철수님," / Traditional Chinese: "小明，" / English: "Hi John,").
 4. 반드시 AI 또는 봇임을 드러내는 표현을 피하세요.
 5. 짧고 명확하게 작성하세요.
 6. 과도한 이모지를 사용하지 마세요.
