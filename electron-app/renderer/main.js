@@ -178,6 +178,7 @@ let waitingForInput = false;
 let currentBotName = 'KIRA';
 let currentLogFilter = 'all';  // 'all' or 'kira.scheduler'
 let allLogs = [];  // Store all logs for filtering
+const MAX_LOGS = 5000;  // Maximum number of logs to keep in memory
 
 // Update main message with translated text and bot name
 function updateMainMessage(botName) {
@@ -914,6 +915,11 @@ function updateServerStatus() {
 function appendLog(data) {
   // Store log for filtering
   allLogs.push(data);
+
+  // Remove old logs if we exceed the maximum
+  if (allLogs.length > MAX_LOGS) {
+    allLogs = allLogs.slice(allLogs.length - MAX_LOGS);
+  }
 
   // Only display if matches current filter
   if (shouldShowLog(data)) {

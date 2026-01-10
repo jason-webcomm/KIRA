@@ -2,13 +2,31 @@ import asyncio
 import logging
 import os
 import sys
+from logging.handlers import RotatingFileHandler
 
 # Setup logging first
+log_dir = os.path.expanduser("~/.kira/logs")
+os.makedirs(log_dir, exist_ok=True)
+
+# Configure logging with file rotation
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
+
+# Add rotating file handler (10MB per file, keep 5 backups = 60MB max)
+file_handler = RotatingFileHandler(
+    os.path.join(log_dir, "kira.log"),
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,  # Keep 5 backup files
+    encoding='utf-8'
+)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+))
+logging.getLogger().addHandler(file_handler)
 
 # DEBUG: Check environment variables at startup
 logging.info(f"[STARTUP DEBUG] CLAUDE_CODE_CLI_PATH={os.environ.get('CLAUDE_CODE_CLI_PATH', 'NOT SET')}")
