@@ -1,10 +1,10 @@
 """
 Email Checker for Microsoft 365 (Lokka MCP)
-Outlook 이메일을 주기적으로 체크하고 LLM으로 처리하는 모듈
+This module periodically checks Outlook emails and processes them with LLM
 
-체커 컨셉: 설정한 MCP의 확장으로 주기적 작업 처리
-- Operator: Lokka MCP 사용 (사용자 요청 처리)
-- Checker: Lokka MCP 사용 (백그라운드 주기 작업)
+Checker Concept: Periodic task processing as an extension of the configured MCP
+- Operator: Uses Lokka MCP (handles user requests)
+- Checker: Uses Lokka MCP (background periodic tasks)
 """
 
 import asyncio
@@ -22,16 +22,16 @@ settings = get_settings()
 
 async def fetch_new_emails() -> List[Dict[str, Any]]:
     """
-    Lokka MCP를 사용하여 최신 읽지 않은 이메일 조회
+    Fetches the latest unread emails using Lokka MCP
 
     Returns:
-        최신 이메일 리스트 (최대 10개)
+        List of latest emails (up to 10)
     """
     if not settings.MS365_ENABLED:
         logging.error("[EMAIL_CHECKER] MS365 MCP is not enabled")
         return []
 
-    # MCP 서버 설정 (Lokka - cached version)
+    # MCP server configuration (Lokka - cached version)
     mcp_servers = {
         "ms365": {
             "command": "npx",
@@ -44,55 +44,55 @@ async def fetch_new_emails() -> List[Dict[str, Any]]:
         }
     }
 
-    system_prompt = """당신은 Outlook 이메일 데이터 수집 전문가입니다.
-Lokka MCP (Microsoft 365 MCP)를 사용하여 읽지 않은 이메일 목록을 조회하고, 구조화된 JSON 데이터로 반환해야 합니다.
+    system_prompt = """You are an Outlook email data collection expert.
+Use Lokka MCP (Microsoft 365 MCP) to query unread emails and return structured JSON data.
 
-**작업 지시:**
-1. `mcp__ms365__*` 도구를 사용하여 받은편지함의 읽지 않은 이메일을 최신 순으로 최대 10개까지 조회하세요
-2. 조회한 이메일들을 **모두 읽음으로 표시**하세요
-3. 각 이메일에 대해 다음 정보를 추출하세요:
-   - id: 이메일 ID
-   - subject: 제목
-   - from: 발신자 객체 ({"emailAddress": {"name": "이름", "address": "이메일주소"}} 형식)
-   - toRecipients: 수신자 배열
-   - ccRecipients: 참조 수신자 배열
-   - receivedDateTime: 수신 시간
-   - bodyPreview: 본문 미리보기 (200자 이내)
-   - isRead: 읽음 여부
-   - hasAttachments: 첨부파일 유무
+**Task Instructions:**
+1. Use `mcp__ms365__*` tools to query up to 10 latest unread emails from the inbox, sorted by date
+2. Mark all queried emails as read
+3. Extract the following information for each email:
+   - id: Email ID
+   - subject: Subject line
+   - from: Sender object ({"emailAddress": {"name": "Name", "address": "EmailAddress"}} format)
+   - toRecipients: Array of recipients
+   - ccRecipients: Array of CC recipients
+   - receivedDateTime: Received timestamp
+   - bodyPreview: Body preview (within 200 characters)
+   - isRead: Read status
+   - hasAttachments: Attachment flag
 
-**출력 형식:**
-반드시 아래와 같은 JSON 배열 형식으로만 응답하세요. 다른 설명이나 텍스트는 포함하지 마세요:
+**Output Format:**
+Respond ONLY in the following JSON array format. Do not include any other text or descriptions:
 
 ```json
 [
   {
-    "id": "메일ID",
-    "subject": "제목",
+    "id": "MailID",
+    "subject": "Subject",
     "from": {
       "emailAddress": {
-        "name": "발신자 이름",
+        "name": "Sender Name",
         "address": "sender@example.com"
       }
     },
     "toRecipients": [
       {
         "emailAddress": {
-          "name": "수신자1",
+          "name": "Recipient1",
           "address": "recipient1@example.com"
         }
       }
     ],
     "ccRecipients": [],
     "receivedDateTime": "2024-01-15T10:30:00Z",
-    "bodyPreview": "본문 미리보기...",
+    "bodyPreview": "Body preview...",
     "isRead": false,
     "hasAttachments": true
   }
 ]
 ```
 
-**주의:** 읽지 않은 이메일이 없으면 빈 배열 [] 반환"""
+**Note:** Return an empty array [] if there are no unread emails."""
 
     try:
         options = ClaudeAgentOptions(
@@ -118,13 +118,13 @@ Lokka MCP (Microsoft 365 MCP)를 사용하여 읽지 않은 이메일 목록을 
         )
 
         async with ClaudeSDKClient(options=options) as client:
-            await client.query("mcp__ms365__* 도구를 사용해서 받은편지함의 읽지 않은 이메일을 최신 10개까지 조회하고 JSON으로 반환해주세요.")
+            await client.query("Please use mcp__ms365__* tools to query up to 10 latest unread emails from the inbox and return them as JSON.")
 
             async for message in client.receive_response():
                 if isinstance(message, ResultMessage):
                     result_text = message.result.strip()
 
-                    # JSON 추출 (```json ... ``` 제거)
+                    # Extract JSON (remove ```json ... ```)
                     if "```json" in result_text or "```" in result_text:
                         json_start = result_text.find("[")
                         json_end = result_text.rfind("]") + 1
@@ -147,10 +147,10 @@ Lokka MCP (Microsoft 365 MCP)를 사용하여 읽지 않은 이메일 목록을 
 
 async def process_emails_batch(emails: List[Dict[str, Any]]):
     """
-    이메일 배치를 에이전트로 처리
+    Processes email batches with an agent
 
     Args:
-        emails: 처리할 이메일 목록
+        emails: List of emails to process
     """
     from app.cc_checkers.ms365.outlook_agent import call_email_task_extractor
     from app.cc_utils.email_tasks_db import get_pending_tasks, complete_task
@@ -162,9 +162,9 @@ async def process_emails_batch(emails: List[Dict[str, Any]]):
 
     logging.info(f"[EMAIL_PROCESSOR] Processing {len(emails)} emails...")
 
-    # 로그 출력
+    # Log output
     for idx, email in enumerate(emails, 1):
-        subject = email.get("subject", "(제목 없음)")
+        subject = email.get("subject", "(No Subject)")
         from_addr = email.get("from", "")
         received_time = email.get("receivedDateTime", "")
         body_preview = email.get("bodyPreview", "")
@@ -174,18 +174,18 @@ async def process_emails_batch(emails: List[Dict[str, Any]]):
         logging.info(f"[EMAIL_PROCESSOR] [{idx}/{len(emails)}] Received: {received_time}")
         logging.info(f"[EMAIL_PROCESSOR] [{idx}/{len(emails)}] Preview: {body_preview[:100]}...")
 
-    # 1. 에이전트 호출하여 이메일 분석 및 할 일 추출 (DB에 저장)
-    # 에이전트가 읽음 표시도 같이 처리함
+    # 1. Call agent to analyze emails and extract tasks (saved to DB)
+    # Agent also handles marking emails as read
     await call_email_task_extractor(emails)
 
-    # 2. DB에서 Pending 상태인 작업 가져오기
+    # 2. Get tasks in Pending status from DB
     pending_tasks = get_pending_tasks()
 
     if not pending_tasks:
         logging.info("[EMAIL_PROCESSOR] No pending tasks found")
         return
 
-    # 3. Slack 채널 큐에 추가
+    # 3. Add to Slack channel queue
     logging.info(f"[EMAIL_PROCESSOR] Found {len(pending_tasks)} pending tasks")
 
     for task in pending_tasks:
@@ -208,14 +208,14 @@ async def process_emails_batch(emails: List[Dict[str, Any]]):
             "thread_ts": None,
         })
 
-        # 작업 완료 표시
+        # Mark task as complete
         complete_task(task_id)
         logging.info(f"[EMAIL_PROCESSOR] Queued task {task_id} to user {user_id}")
 
 
 async def check_email_updates():
     """
-    주기적으로 호출되는 이메일 체크 함수 (스케줄러에서 호출)
+    Periodically called email check function (called by scheduler)
     """
     if not settings.MS365_ENABLED:
         logging.warning("[EMAIL_CHECKER] MS365 MCP is not enabled, skipping email check")
@@ -224,12 +224,12 @@ async def check_email_updates():
     logging.info("[EMAIL_CHECKER] Checking for new emails...")
 
     try:
-        # 새 이메일 조회
+        # Fetch new emails
         emails = await fetch_new_emails()
 
         if emails:
             logging.info(f"[EMAIL_CHECKER] Found {len(emails)} new emails, starting background processing")
-            # 백그라운드 태스크로 처리
+            # Process in background task
             asyncio.create_task(process_emails_batch(emails))
         else:
             logging.info("[EMAIL_CHECKER] No new emails found")

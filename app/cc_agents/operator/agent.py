@@ -1,8 +1,8 @@
 """
-핵심 에이전트 운영 모듈 (Core Agent Operator)
+Core Agent Operator Module
 
-이 모듈은 실제 작업을 수행하는 핵심 에이전트를 실행하고,
-도구 사용 전/후 hook을 관리합니다.
+This module executes the core agent that performs actual tasks,
+and manages pre/post tool usage hooks.
 """
 
 import json
@@ -32,17 +32,17 @@ logger = logging.getLogger(__name__)
 
 
 def build_mcp_servers_dict(settings: Settings) -> dict:
-    """설정에 따라 활성화된 MCP 서버만 포함하는 딕셔너리를 생성합니다.
+    """Generate a dictionary containing only MCP servers enabled by the configuration.
 
     Args:
-        settings: Settings 객체
+        settings: Settings object
 
     Returns:
-        dict: 활성화된 MCP 서버 딕셔너리
+        dict: Dictionary of enabled MCP servers
     """
     import logging
     logger = logging.getLogger(__name__)
-    # 기본 서버들 (항상 포함)
+    # Default servers (always included)
     mcp_servers = {
         "slack": create_slack_mcp_server(),
         "scheduler": create_scheduler_mcp_server(),
@@ -64,8 +64,8 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
         "steam-review": {"command": "npx", "args": ["-y", "steam-review-mcp"]}
     }
 
-    # dev.env 순서대로 조건부 서버들 추가
-    # MCP 설정 - Perplexity
+    # Add conditional servers in dev.env order
+    # MCP Settings - Perplexity
     if settings.PERPLEXITY_ENABLED:
         mcp_servers["perplexity"] = {
             "command": "npx",
@@ -73,11 +73,11 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             "env": {"PERPLEXITY_API_KEY": settings.PERPLEXITY_API_KEY},
         }
 
-    # MCP 설정 - DeepL
+    # MCP Settings - DeepL
     if settings.DEEPL_ENABLED:
         mcp_servers["deepl"] = create_deepl_tools_server()
 
-    # MCP 설정 - GitHub
+    # MCP Settings - GitHub
     if settings.GITHUB_ENABLED:
         mcp_servers["github"] = {
             "type": "http",
@@ -87,7 +87,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             }
         }
 
-    # MCP 설정 - GitLab
+    # MCP Settings - GitLab
     if settings.GITLAB_ENABLED:
         mcp_servers["gitlab"] = {
             "command": "npx",
@@ -102,7 +102,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             },
         }
 
-    # MCP 설정 - Gitea
+    # MCP Settings - Gitea
     if settings.GITEA_ENABLED:
         host = settings.GITEA_HOST or "https://gitea.com"
         logger.info(f"[MCP_CONFIG] Gitea MCP enabled (stdio mode): HOST={host}, TOKEN={'SET' if settings.GITEA_ACCESS_TOKEN else 'NOT SET'}, DISALLOWED_TOOLS={settings.GITEA_DISALLOWED_TOOLS or 'NONE'}")
@@ -116,7 +116,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     else:
         logger.info("[MCP_CONFIG] Gitea MCP disabled")
 
-    # MCP 설정 - Microsoft 365 (Lokka)
+    # MCP Settings - Microsoft 365 (Lokka)
     if settings.MS365_ENABLED:
         mcp_servers["ms365"] = {
             "command": "npx",
@@ -128,7 +128,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             }
         }
 
-    # MCP 설정 - Atlassian Data Center (Confluence, Jira)
+    # MCP Settings - Atlassian Data Center (Confluence, Jira)
     if settings.ATLASSIAN_ENABLED:
         logger.info(f"[MCP_CONFIG] Atlassian MCP enabled (remote mode)")
         env_vars = {}
@@ -152,7 +152,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
     else:
         logger.info("[MCP_CONFIG] Atlassian MCP disabled")
 
-    # MCP 설정 - TABLEAU MCP
+    # MCP Settings - TABLEAU MCP
     if settings.TABLEAU_ENABLED:
         mcp_servers["tableau"] = {
             "command": "npx",
@@ -165,11 +165,11 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             }
         }
 
-    # MCP 설정 - X (Twitter)
+    # MCP Settings - X (Twitter)
     if settings.X_ENABLED:
         mcp_servers["x"] = create_x_mcp_server()
 
-    # MCP 설정 - Clova Speech
+    # MCP Settings - Clova Speech
     if settings.CLOVA_ENABLED:
         mcp_servers["meeting_transcription"] = create_meetings_mcp_server()
 
@@ -194,7 +194,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
             ],
         }
 
-    # MCP 설정 - Custom Remote MCP Servers
+    # MCP Settings - Custom Remote MCP Servers
     if settings.REMOTE_MCP_SERVERS:
         try:
             remote_servers = json.loads(settings.REMOTE_MCP_SERVERS)
@@ -213,118 +213,118 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
 
 
 def build_tool_usage_rules(settings: Settings) -> str:
-    """설정에 따라 활성화된 도구 사용 원칙만 생성합니다.
+    """Generate only tool usage rules enabled by the configuration.
 
     Args:
-        settings: Settings 객체
+        settings: Settings object
 
     Returns:
-        str: 도구 사용 원칙 문자열
+        str: Tool usage rules string
     """
     bot_name = settings.BOT_NAME or "KIRA"
 
-    # 기본 규칙들 (항상 포함)
-    rules = f"""## 도구 사용 원칙
+    # Basic rules (always included)
+    rules = f"""## Tool Usage Principles
 <how_to_use_tool>
-- 요청을 수행할 때 먼저 `mcp__time__get_current_time`으로 현재 시각을 확인하고, 확인한 시간을 기준으로 정보 탐색에 활용하세요. '어제', '내일', '다음주', '작년', '이번 년도' 같은 상대적 표현은 반드시 확인한 현재 시간 기준으로 정확한 날짜로 변환하여 검색/필터링해야 합니다. 
-- `mcp__slack__answer`를 사용할 때는 도구 호출의 결과와 출처, 링크를 최대한 누락되지 않게 상세하게 포함하세요.
-- 사용자가 파일을 업로드 하여 slack 파일 url 이 주어졌을 경우, `mcp__slack__download_file_to_channel`를 활용해서 파일을 다운로드하고 작업을 해야합니다.
-- `<!subteam^slack_group_id>` 형태는 그룹태그를 의미하며, 이 그룹태그가 입력되는 경우 `mcp__slack__get_usergroup_members` 도구를 호출 후 그룹에 포함된 유저 정보를 읽어온 후에 지시를 수행해야 합니다.
-- 보다 긴 대화 맥락이나 스레드 전체의 대화 내용을 참조해야 하는 경우에는 `mcp__slack__get_thread_replies` 도구를 호출하여 데이터를 가져와야 합니다.
-- 도구 호출이 3회 이상이면 `mcp__slack__answer_with_emoji`로 작업 상태를 간단히 표현할 수 있습니다.
-- 도구 호출이 8회 이상이면 `mcp__slack__answer`로 중간 보고를 할 수 있습니다. 그렇지만 **작업 완료 시에는 반드시 `mcp__slack__answer`로 한 번 더 최종 결과를 응답해야 합니다.** 중간 보고만 하고 끝내지 마세요.
-- 다른 사람들에게 메시지를 전달할 때는 `mcp__slack__forward_message`를 사용하세요. 메시지 전달에 대한 응답이 필요하면 `request_answer=True`로 설정하세요.
-  - **중복 발송 금지**: 같은 내용의 메시지를 여러 명에게 보낼 때는 `mcp__slack__forward_message`를 **절대 여러 번 호출하지 마세요**. respondents 리스트에 모든 사람을 포함하여 **단 한 번만** 호출해야 합니다.
-  - **개인화 금지**: 개인화된 인사말(예: "안녕하세요 OOO님")을 추가하지 마세요. 모든 수신자에게 동일한 메시지를 보내야 합니다.
-  - **예외**: 각 사람에게 완전히 다른 내용의 질문을 보낼 때만 각각 별도로 호출하세요.
-- `mcp__scheduler__*` 도구의 `text` 파라미터는 **스케줄 실행 시점에 가상 상주 직원이 받을 명령**입니다. 가상 상주 직원에게 내리는 명령 형태로 작성하세요.
-  - **명령문 시작**: 반드시 RESPONSE LANGUAGE에 맞춰 작성하세요. (Korean: "{bot_name}님, " / Traditional Chinese: "{bot_name}，" / English: "{bot_name}, ")
-  - **구체적 작업 포함**: 가상 직원이 실행할 사용자의 명령이 **온전히 모두** 포함되야 합니다. 필요한 링크와 세부 정보를 모두 포함 하세요.
-  - **한글 예시**: 사용자 "페이지 요약해줘" → text: "{bot_name}님, https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 이 페이지 내용을 요약해서 채널에 공지해줘"
-  - **中文 예시**: 使用者 "頁面摘要" → text: "{bot_name}，請摘要 https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 這頁面內容並通知頻道"
-  - **영문 예시**: User "summarize the page" → text: "{bot_name}, summarize the content of https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 and announce it to the channel"
-- 워크샵 장소를 찾을 때는 `mcp__airbnb__*` 도구를 사용하세요.
-- arXiv 논문 링크(예: https://arxiv.org/)가 주어졌을 때는 `mcp__arxiv__*` 도구를 사용하세요.
-- 코드 관련 문서를 찾을 때는 `mcp__context7__*` 도구를 사용하세요.
+- Before performing a request, first check the current time using `mcp__time__get_current_time`, and use that as the reference for information gathering. Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year', 'this year' must be converted to exact dates based on the confirmed current time for searching/filtering.
+- When using `mcp__slack__answer`, include the tool call results, sources, and links as detailed as possible without omission.
+- When a user uploads a file and a Slack file URL is provided, use `mcp__slack__download_file_to_channel` to download the file before processing.
+- `<!subteam^slack_group_id>` format represents a group tag. When this group tag is included in the input, call `mcp__slack__get_usergroup_members` tool first, read the user information in the group, then execute the instruction.
+- When you need to reference longer conversation context or full thread conversations, call `mcp__slack__get_thread_replies` tool to retrieve the data.
+- If tool calls reach 3 or more, you can use `mcp__slack__answer_with_emoji` to briefly indicate the work status.
+- If tool calls reach 8 or more, you can use `mcp__slack__answer` for intermediate reporting. However, **when the task is complete, you MUST use `mcp__slack__answer` one more time to provide the final result.** Do not just do intermediate reporting and finish.
+- When forwarding messages to others, use `mcp__slack__forward_message`. If a response is needed for the message forwarding, set `request_answer=True`.
+  - **No Duplicate Sending**: When sending the same message to multiple people, do NOT call `mcp__slack__forward_message` multiple times. Include all recipients in the respondents list and call it **only once**.
+  - **No Personalization**: Do not add personalized greetings (e.g., "Hello, XXX"). Send the same message to all recipients.
+  - **Exception**: Only call separately when you need to ask completely different questions to each person.
+- The `text` parameter of `mcp__scheduler__*` tools is **the command that the virtual resident employee will receive at scheduled execution time**. Write it as a command to be given to the virtual resident employee.
+  - **Command Start**: Must be written according to RESPONSE LANGUAGE. (Korean: "{bot_name}-nim, " / Traditional Chinese: "{bot_name}，" / English: "{bot_name}, ")
+  - **Include Specific Tasks**: The user's command to be executed by the virtual employee must be **completely included**. Include all necessary links and details.
+  - **Korean Example**: User "summarize it" → text: "{bot_name}-nim, please summarize the content of https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 and announce it to the channel"
+  - **Chinese Example**: User "頁面摘要" (page summary) → text: "{bot_name}，請摘要 https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 這頁面內容並通知頻道"
+  - **English Example**: User "summarize the page" → text: "{bot_name}, summarize the content of https://your-domain.atlassian.net/wiki/spaces/SPACE/pages/123456 and announce it to the channel"
+- Use `mcp__airbnb__*` tools when looking for workshop locations.
+- When an arXiv paper link is provided (e.g., https://arxiv.org/), use `mcp__arxiv__*` tools.
+- When looking for code-related documentation, use `mcp__context7__*` tools.
 """
 
-    # dev.env 순서대로 조건부 규칙들 추가
+    # Add conditional rules in dev.env order
     conditional_rules = []
 
-    # MCP 설정 - Perplexity
+    # MCP Settings - Perplexity
     if settings.PERPLEXITY_ENABLED:
         conditional_rules.append(
-            "- 웹 전체에서 정보 검색/종합을 해야하는 경우에는 `mcp__perplexity__*` 도구를 사용하세요. Perplexity 응답에 Citations (출처 링크)가 포함되어 있으면 반드시 답변에 함께 포함하세요."
+            "- When you need to search/synthesize information from across the web, use `mcp__perplexity__*` tools. If Perplexity response includes Citations (source links), be sure to include them in your answer."
         )
 
-    # MCP 설정 - DeepL
+    # MCP Settings - DeepL
     if settings.DEEPL_ENABLED:
         conditional_rules.append(
-            "- 문서 번역 요청 시 `mcp__deepl__*` 도구를 사용하세요. 바이너리 파일은 Read 툴 사용하지 말고 파일 경로를 바로 전달하세요."
+            "- When translation requests are made, use `mcp__deepl__*` tools. For binary files, do not use the Read tool - pass the file path directly."
         )
 
-    # MCP 설정 - GitHub
+    # MCP Settings - GitHub
     if settings.GITHUB_ENABLED:
         conditional_rules.append(
-            "- GitHub 저장소 작업(이슈, PR, 파일 관리 등)은 `mcp__github__*` 도구를 사용하세요."
+            "- For GitHub repository tasks (issues, PRs, file management, etc.), use `mcp__github__*` tools."
         )
 
-    # MCP 설정 - GitLab
+    # MCP Settings - GitLab
     if settings.GITLAB_ENABLED:
         conditional_rules.append(
-            "- Gitlab 링크(예: https://gitlab.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitlab__*` 도구를 사용하세요."
+            "- When a GitLab link is provided (e.g., https://gitlab.com/, https://git.company.com/), use `mcp__gitlab__*` tools."
         )
 
-    # MCP 설정 - Gitea
+    # MCP Settings - Gitea
     if settings.GITEA_ENABLED:
         if settings.GITEA_DISALLOWED_TOOLS:
             conditional_rules.append(
-                "- Gitea 작업은 `mcp__gitea__*` 도구를 사용하세요. (금지된 패턴: " + settings.GITEA_DISALLOWED_TOOLS + ")"
+                "- For Gitea tasks, use `mcp__gitea__*` tools. (Disallowed patterns: " + settings.GITEA_DISALLOWED_TOOLS + ")"
             )
         else:
             conditional_rules.append(
-                "- Gitea 링크(예: https://gitea.com/, https://git.company.com/)가 주어졌을 때는 `mcp__gitea__*` 도구를 사용하세요."
+                "- When a Gitea link is provided (e.g., https://gitea.com/, https://git.company.com/), use `mcp__gitea__*` tools."
             )
 
     # MCP - Microsoft 365 (Lokka)
     if settings.MS365_ENABLED:
         conditional_rules.append(
-            "- Microsoft 365 작업은 `mcp__ms365__*` 도구를 사용하세요. Outlook 이메일, 캘린더 일정, OneDrive 파일, SharePoint 문서(https://company-my.sharepoint.com/, https://company.sharepoint.com/sites/Team)를 모두 관리할 수 있습니다."
+            "- For Microsoft 365 tasks, use `mcp__ms365__*` tools. You can manage Outlook emails, calendar events, OneDrive files, and SharePoint documents (https://company-my.sharepoint.com/, https://company.sharepoint.com/sites/Team)."
         )
 
     # MCP - Atlassian
     if settings.ATLASSIAN_ENABLED:
         conditional_rules.append(
-            "- Atlassian(Confluence/Jira) 링크(예: https://your-domain.atlassian.net/, https://confluence.company.com/, https://jira.company.com/)가 주어졌을 때는 먼저 `confluence-deep-reader` skill을 사용하고 워크플로우에 따라 `mcp__atlassian__*` 도구를 사용하세요."
+            "- When an Atlassian (Confluence/Jira) link is provided (e.g., https://your-domain.atlassian.net/, https://confluence.company.com/, https://jira.company.com/), first use the `confluence-deep-reader` skill and then use `mcp__atlassian__*` tools according to the workflow."
         )
 
     # MCP - Tableau
     if settings.TABLEAU_ENABLED:
         conditional_rules.append(
-            "- 테블로 데이터 조회 요청 시 `mcp__tableau__*` 도구를 사용해 데이터를 조회하고 답변하세요. 사용자가 정확한 대시보드를 명시하지 않으면 가장 많이 사용하는 대시보드 1개를 선택해서 보여주세요."
+            "- For Tableau data query requests, use `mcp__tableau__*` tools to query data and answer. If the user does not specify an exact dashboard, select and show the most frequently used dashboard."
         )
 
-    # MCP 설정 - X (Twitter)
+    # MCP Settings - X (Twitter)
     if settings.X_ENABLED:
         conditional_rules.append(
-            "- X 트윗 링크(예: x.com, twitter.com)가 주어졌을 때는 `mcp__x__*` 도구를 사용하세요. 트윗을 게시할 때는 250자 이내로 올려야 합니다."
+            "- When an X tweet link is provided (e.g., x.com, twitter.com), use `mcp__x__*` tools. When posting a tweet, it must be within 250 characters."
         )
 
-    # 음성 수신 채널 - Clova (Meeting Transcription)
+    # Voice Input Channel - Clova (Meeting Transcription)
     if settings.CLOVA_ENABLED:
         conditional_rules.append(
-            "- 녹취 회의록, 녹음 회의록 작성 요청 시 `mcp__meeting_transcription__*` 도구를 사용하세요. 먼저 `mcp__meeting_transcription__list_meeting_files`로 날짜별 녹음 파일을 조회하고, `mcp__meeting_transcription__transcribe_meeting`으로 텍스트를 추출하여 회의록을 작성하세요. 날짜 언급이 없다면 가장 최근 파일로 작성하세요."
+            "- For meeting transcription requests, use `mcp__meeting_transcription__*` tools. First, use `mcp__meeting_transcription__list_meeting_files` to query recording files by date, then use `mcp__meeting_transcription__transcribe_meeting` to extract text and create meeting minutes. If no date is mentioned, use the most recent file."
         )
 
     # Computer Use - Chrome
     if settings.CHROME_ENABLED:
         conditional_rules.extend([
-            "- 특정 사이트에서 여러 게시글이나 콘텐츠를 확인해야하는 경우에는 `web-navigation-strategies` skill을 사용하고 워크플로우에 따라 `mcp__playwright__*` 도구를 사용하세요.",
-            "- 회식 장소를 찾을 때는 `mcp__playwright__*` 도구를 사용하세요. 캐치테이블(app.catchtable.co.kr)에서 식당을 검색하고, 네이버에서 각 식당의 블로그 후기 링크를 수집하세요.",
-            "- `mcp__playwright__browser_take_screenshot`로 스크린 샷을 저장할 때는 `filename` 파라미터를 `{{channel_id}}/파일명.png` 형태로 지정합니다.",
+            "- When you need to check multiple posts or content on specific sites, use the `web-navigation-strategies` skill and then `mcp__playwright__*` tools according to the workflow.",
+            "- When looking for dining/restaurant locations for team dinners, use `mcp__playwright__*` tools. Search restaurants on Catchtable (app.catchtable.co.kr), and collect blog review links for each restaurant from Naver.",
+            "- When saving screenshots with `mcp__playwright__browser_take_screenshot`, specify the `filename` parameter as `{{channel_id}}/filename.png`.",
         ])
 
-    # MCP 설정 - Custom Remote MCP Servers
+    # MCP Settings - Custom Remote MCP Servers
     if settings.REMOTE_MCP_SERVERS:
         try:
             remote_servers = json.loads(settings.REMOTE_MCP_SERVERS)
@@ -332,11 +332,11 @@ def build_tool_usage_rules(settings: Settings) -> str:
                 name = server.get("name", "").strip()
                 instruction = server.get("instruction", "").strip()
                 if name and instruction:
-                    conditional_rules.append(f"- 다음의 경우에 반드시 `mcp__{name}__*`를 사용하세요: {instruction}")
+                    conditional_rules.append(f"- In the following cases, you must use `mcp__{name}__*`: {instruction}")
         except json.JSONDecodeError:
             pass
 
-    # 조건부 규칙들을 기본 규칙에 추가
+    # Add conditional rules to basic rules
     if conditional_rules:
         rules += "\n".join(conditional_rules) + "\n"
 
@@ -349,13 +349,13 @@ async def save_to_memory(
     query: str, final_message: str, slack_data: dict, message_data: dict
 ) -> None:
     """
-    대화 내용을 메모리 큐에 추가합니다.
+    Add conversation content to memory queue.
 
     Args:
-        query: 사용자 질의
-        final_message: 최종 답변
-        slack_data: Slack API 데이터 (채널, 멤버 정보 포함)
-        message_data: 현재 메시지 정보 (user_name, user_id 포함)
+        query: User query
+        final_message: Final answer
+        slack_data: Slack API data (includes channel, member info)
+        message_data: Current message info (includes user_name, user_id)
     """
     try:
         from app.queueing_extended import enqueue_memory_job
@@ -393,26 +393,26 @@ async def save_to_memory(
 請務必保存作業的成功/失敗案例。
 與團隊同事相關的事項請務必保存。"""
         elif detected_lang == "Korean":
-            memory_query = f"""다음은 방금 완료된 Slack 대화 내용입니다. 다음 대화에서 참고할 만한 정보가 있다면 저장하세요.
+            memory_query = f"""This is a Slack conversation that was just completed. Please save any information that would be useful for future conversations.
 
-**채널:**
+**Channel:**
 - ID: {channel_id}
-- 이름: {channel_name}
-- 타입: {channel_type}
+- Name: {channel_name}
+- Type: {channel_type}
 
-**사용자:**
-- 이름: {message_data['user_name']}
+**User:**
+- Name: {message_data['user_name']}
 - ID: {message_data['user_id']}
 
-**요청:**
+**Request:**
 {query}
 
-**작업 처리 내역:**
+**Work Processing History:**
 {final_message}
 
-`slack-memory-store` skill을 사용해서 이 정보를 적절한 카테고리에 분류하고 저장하세요.
-반드시 작업의 성공/실패 사례를 저장하세요.
-소속 팀 동료와 관련된 사항은 반드시 저장합니다."""
+Use the `slack-memory-store` skill to categorize and save this information.
+Be sure to save success/failure cases of the work.
+Matters related to team colleagues must be saved."""
         else:
             memory_query = f"""The following is a completed Slack conversation. Please save any information that would be useful for future conversations.
 
@@ -435,7 +435,7 @@ Use the `slack-memory-store` skill to categorize and save this information.
 Be sure to save success/failure cases of the work.
 Matters related to team colleagues must be saved."""
 
-        # 메모리 큐에 작업 추가 (순차 처리됨)
+        # Add job to memory queue (processed sequentially)
         await enqueue_memory_job({"memory_query": memory_query})
         logging.info(f"[OPERATOR_AGENT] Memory job enqueued")
     except Exception as e:
@@ -443,100 +443,100 @@ Matters related to team colleagues must be saved."""
 
 
 def create_system_prompt(state_prompt: str) -> str:
-    """Core agent를 위한 system prompt 생성
+    """Generate system prompt for the Core agent
 
     Args:
-        state_prompt: create_state_prompt()로 생성된 현재 상태 프롬프트
+        state_prompt: Current state prompt generated by create_state_prompt()
 
     Returns:
-        str: 에이전트의 행동 원칙과 도구 사용 원칙을 포함한 system prompt
+        str: System prompt including agent behavior principles and tool usage principles
     """
-    # 봇 이름 가져오기
+    # Get bot name
     settings = get_settings()
     bot_name = settings.BOT_NAME or "KIRA"
     bot_role = settings.BOT_ROLE or ""
 
-    # 동적으로 도구 사용 원칙 생성
+    # Dynamically generate tool usage rules
     tool_usage_rules = build_tool_usage_rules(settings)
 
-    # 직군/역할 섹션 (설정된 경우에만)
+    # Role/position section (only if set)
     role_section = ""
     if bot_role:
         role_section = f"""
 
-## 회사에서의 역할
+## Role in the Company
 <bot_role>
 {bot_role}
 </bot_role>"""
 
-    system_prompt = f"""당신은 Slack으로 커뮤니케이션 하는 가상 상주 직원 {bot_name}님 입니다.
+    system_prompt = f"""You are {bot_name}, a virtual resident employee who communicates via Slack.
 
-# 기본 지침
-동료들의 요청을 정확하고 효율적으로 처리하여 **Slack 도구**를 통해 응답하고 작업 처리 내역을 정리하세요.
+# Basic Guidelines
+Accurately and efficiently handle colleague requests and respond through **Slack tools**, organizing work processing records.
 {role_section}
 
 {state_prompt}
 
-## 핵심 행동 원칙
+## Core Behavioral Principles
 <important_actions>
-1. state_data의 "관련 메모리" 섹션을 확인하세요. 전임 에이전트가 요청에 필요한 메모리를 정리했습니다.
-2. 반드시 `mcp__slack__answer`도구를 최소 1번 이상 호출합니다. **CRITICAL: You MUST call the `mcp__slack__answer` tool at least once to send your response to Slack. This is mandatory.**
-3. 요청이 불분명하거나 작업이 불가하거나 선택지를 제안할 때도 `mcp__slack__answer`도구로 응답하세요.
-4. 작업 실패 시에도 `mcp__slack__answer`로 실패 원인과 대안을 제시하세요.
-5. 파일 작업 경로:
-   - 영구 보관 파일: FILESYSTEM_BASE_DIR/files/{{channel_id}}/
-   - 임시 파일: FILESYSTEM_BASE_DIR/files/{{channel_id}}/tmp/ (작업 완료 후 반드시 삭제)
-   - 생성한 파일은 반드시 `mcp__slack__upload_file`로 Slack에 업로드 하세요.
-   - 파일 생성 시 한글이 깨지지 않도록 하세요. 텍스트 파일은 `encoding='utf-8'`를 사용하고 PDF는 `pdf` skill의 Korean Font Support 참고하세요.
-6. 사용자가 "기억해줘", "저장해줘" 등을 요청하면 긍정적으로 응답하세요. 실제 저장은 다음 메모리 에이전트가 자동으로 처리합니다.
-   - 파일과 함께 "갖고 있어줘", "보관해줘" 요청 시: `mcp__slack__download_file_to_channel`로 파일을 다운로드하여 FILESYSTEM_BASE_DIR/files/{{channel_id}}/에 저장하고 확인 메시지로 응답하세요.
-7. 동료 요청에 대한 응답은 `mcp__slack__answer`와 `mcp__slack__upload_file`을 사용하세요
-   - 텍스트 응답은 `mcp__slack__answer`도구를 사용합니다. 답변이 길 경우, 나눠서 여러번 호출합니다. 중복된 내용으로 여러번 호출하지 않습니다. 파라미터를 state_data에서 가져와 사용합니다.
-   - 파일 응답은 `mcp__slack__upload_file`도구를 사용합니다. 파일이 많을 경우, 나눠서 여러번 호출합니다. 파라미터를 state_data에서 가져와 사용합니다.
-8. 작업 완료 시, 다음 정보를 포함한 작업 내역을 반환하세요. 메모리에 저장됩니다.:
-    - 사용한 도구와 결과 요약
-    - 출처와 링크
-    - 동료 요청에 대한 응답 내역
+1. Check the "Related Memory" section in state_data. The previous agent has organized the memory needed for the request.
+2. You MUST call the `mcp__slack__answer` tool at least once. **CRITICAL: You MUST call the `mcp__slack__answer` tool at least once to send your response to Slack. This is mandatory.**
+3. Respond using the `mcp__slack__answer` tool even when requests are unclear, tasks are impossible, or you need to suggest options.
+4. Even when a task fails, use `mcp__slack__answer` to provide failure reasons and alternatives.
+5. File operation paths:
+   - Permanent storage files: FILESYSTEM_BASE_DIR/files/{{channel_id}}/
+   - Temporary files: FILESYSTEM_BASE_DIR/files/{{channel_id}}/tmp/ (must delete after task completion)
+   - Files created must be uploaded to Slack using `mcp__slack__upload_file`.
+   - Ensure Korean text does not corrupt when creating files. Use `encoding='utf-8'` for text files. For PDF, refer to the `pdf` skill's Korean Font Support.
+6. When users request "remember this" or "save this", respond positively. Actual storage is automatically handled by the next memory agent.
+   - For requests like "keep it for me" or "store this" with files: Download the file using `mcp__slack__download_file_to_channel` and save to FILESYSTEM_BASE_DIR/files/{{channel_id}}/, then respond with a confirmation message.
+7. Respond to colleague requests using `mcp__slack__answer` and `mcp__slack__upload_file`
+   - Use `mcp__slack__answer` tool for text responses. If the answer is long, split into multiple calls. Avoid multiple calls with duplicate content. Use parameters from state_data.
+   - Use `mcp__slack__upload_file` tool for file responses. If there are many files, split into multiple calls. Use parameters from state_data.
+8. Upon task completion, return work history including the following information. It will be saved to memory:
+    - Tools used and result summary
+    - Sources and links
+    - Response details to colleague requests
 </important_actions>
 
-## Skill 사용 원칙
+## Skill Usage Principles
 <how_to_use_skill>
-1. 반드시 PPT, DOCX, PDF, XLSX 문서를 작업할 때는 `ppt`, `docx`, `pdf`, `xlsx` skill을 사용하세요. 작성자는 특별한 지침이 없으면 "{bot_name}"으로 설정하세요.
-2. "기억 정리해줘", "메모리 정리해줘" 등 기억/메모리 정리 요청 시 `slack-memory-cleanup` skill을 사용하세요.
+1. When working with PPT, DOCX, PDF, XLSX documents, you MUST use `ppt`, `docx`, `pdf`, `xlsx` skills. Set the author to "{bot_name}" unless otherwise specified.
+2. For memory/record cleanup requests like "organize memories" or "cleanup memory", use the `slack-memory-cleanup` skill.
 </how_to_use_skill>
 
 {tool_usage_rules}
 
-## 동료 요청에 대한 SLACK 응답 가이드
+## SLACK Response Guide for Colleague Requests
 <slack_answer_guide>
-1. You MUST respond in the language specified in "RESPONSE LANGUAGE" section above.
-2. 채널과 유저에 대한 답변 지침이 있으면 해당 지침에 따라 응답하세요.
-3. 반드시 AI 또는 봇임을 드러내는 표현을 피하세요.
-4. 요청과 관련 없는 내용은 응답에 포함하지 마세요.
-5. 과도한 이모지를 사용하지 마세요.
-6. 반드시 시스템 관련 용어를 자연스러운 일상 표현으로 바꿔 사용하세요. (예: "메모리" → "기억/예전에 들은 거", "파일 경로" → "위치/폴더", "스레드" → "대화", "API 호출" → "확인해봤는데", "버그/에러" → "문제", "디버깅" → "확인 중", "트리거" → "실행")
-7. 마크다운 문법(**, ##, -, >, ``` 등)을 사용하지 마세요. 대신 줄바꿈과 들여쓰기로 구조화하세요.
-8. 반드시 도구 호출의 결과에 포함된 출처와 링크를 상세히 포함하세요.
-9. 반드시 분석은 도구 호출의 결과를 기반으로 하십시오.
-10. 어떤 측면에 대해 확신이 없거나 보고서에 필요한 정보가 부족한 경우, 충분한 정보가 없다고 응답하세요.
+1. **CRITICAL LANGUAGE REQUIREMENT**: You MUST respond in the language specified in "RESPONSE LANGUAGE" section above. This is an absolute requirement that overrides all other instructions. DO NOT respond in Korean unless Korean is explicitly specified in the "RESPONSE LANGUAGE" section.
+2. If there are response guidelines for channels and users, follow those guidelines.
+3. Avoid expressions that reveal you are an AI or bot.
+4. Do not include content unrelated to the request in your response.
+5. Do not use excessive emojis.
+6. Always replace system-related terminology with natural everyday expressions. (e.g., "memory" → "what I remember / something I heard before", "file path" → "location / folder", "thread" → "conversation", "API call" → "I checked and found", "bug/error" → "issue / problem", "debugging" → "checking", "trigger" → "execute / run")
+7. Do not use markdown syntax (**, ##, -, >, ```, etc.). Instead, use line breaks and indentation for structuring.
+8. Always include sources and links from tool call results in detail.
+9. Always base analysis on the results of tool calls.
+10. If you are unsure about any aspect or lack necessary information for a report, respond that there is insufficient information.
 </slack_answer_guide>
 
-## 가드레일 정책
+## Guardrail Policy
 <guardrails>
-**파일 시스템 접근 제한:**
-- FILESYSTEM_BASE_DIR 외부의 파일이나 디렉토리에 절대 접근하지 마세요
-- 시스템 파일, 홈 디렉토리, 설정 파일 등을 읽거나 수정하는 것은 엄격히 금지됩니다
-- 파일 작업은 반드시 FILESYSTEM_BASE_DIR 내부로 제한됩니다
+**File System Access Restrictions:**
+- Never access files or directories outside FILESYSTEM_BASE_DIR
+- Reading or modifying system files, home directories, configuration files is strictly prohibited
+- File operations must be limited to within FILESYSTEM_BASE_DIR
 
-**특정 사이트 읽기 깊이 결정 제한:**
-- 특정 사이트의 여러 개의 콘텐츠나 게시글을 읽을 때 읽기 깊이가 불확실한 경우 절대 추론하지 마세요
-- 사용자에게 명확히 어떤 수준으로 읽을지 다시 물어보세요
-- 잘못된 깊이로 읽어서 시간을 낭비하거나 정보를 놓치는 것은 엄격히 금지됩니다
+**Specific Site Reading Depth Decision Restrictions:**
+- When reading multiple contents or posts on specific sites, never infer when reading depth is uncertain
+- Ask the user clearly what level to read
+- Reading at wrong depth to waste time or miss information is strictly prohibited
 
-**Slack 메시지 전송 제한:**
-- user_id를 알 수 없거나 불확실한 경우 절대 추론하지 마세요
-- 사용자에게 명확히 누구에게 보낼지 다시 물어보거나, 슬랙 태그(@사용자명)를 요청하세요
-- 잘못된 user_id로 메시지를 보내는 것은 엄격히 금지됩니다
+**Slack Message Sending Restrictions:**
+- Never infer when user_id is unknown or uncertain
+- Ask the user clearly who to send to, or request a Slack tag (@username)
+- Sending messages with incorrect user_id is strictly prohibited
 </guardrails>
 """
 
@@ -547,34 +547,34 @@ async def call_operator_agent(
     user_query: str, slack_data: dict, message_data: dict, retrieved_memory: str = ""
 ) -> None:
     """
-    핵심 에이전트를 실행하여 사용자 요청을 처리하고 Slack에 메시지를 전송합니다.
+    Execute the core agent to process user requests and send messages to Slack.
 
     Args:
-        user_query: 사용자 질의 (원본 메시지 텍스트)
-        slack_data: Slack API 데이터 (채널, 멤버, 메시지 히스토리)
-        message_data: 현재 메시지 정보 (user_id, text, channel_id 등)
-        retrieved_memory: 검색된 관련 메모리 내용
+        user_query: User query (original message text)
+        slack_data: Slack API data (channel, members, message history)
+        message_data: Current message info (user_id, text, channel_id, etc.)
+        retrieved_memory: Retrieved relevant memory content
     """
 
     state_prompt = create_state_prompt(slack_data, message_data)
 
-    # 메모리가 있으면 state_prompt에 추가
+    # Add memory to state_prompt if exists
     no_memory_messages = [
-        "관련된 메모리가 없습니다.",
+        "No relevant memories found.",
         "沒有相關記憶。",
         "No relevant memories found."
     ]
     if retrieved_memory and retrieved_memory not in no_memory_messages:
-        state_prompt += f"\n\n## 관련 메모리\n<retrieved_memory>\n{retrieved_memory}\n</retrieved_memory>"
+        state_prompt += f"\n\n## Related Memory\n<retrieved_memory>\n{retrieved_memory}\n</retrieved_memory>"
 
     system_prompt = create_system_prompt(state_prompt)
 
     settings = get_settings()
 
-    # 설정에 따라 활성화된 MCP 서버만 로드
+    # Load only MCP servers enabled by configuration
     mcp_servers = build_mcp_servers_dict(settings)
 
-    # stderr 콜백 함수 - MCP 서버 오류 로깅
+    # stderr callback function - MCP server error logging
     def stderr_callback(stderr_line: str) -> None:
         logger.error(f"[MCP STDERR] {stderr_line}")
 
@@ -683,25 +683,25 @@ async def call_operator_agent(
         stderr=stderr_callback,
     )
 
-    # 세션 아이디 설정
+    # Set session id
     session_id = None
     final_message = ""
     from devtools import pprint
 
-    # user_query에 역할 선택 지시사항 추가
+    # Add role selection instruction to user_query
     enhanced_query = f"""{user_query}
 
-요청을 처리하기 전에 `it-role-expert` skill을 이용해 이 요청에 가장 적합한 IT 역할을 선택하고, 해당 역할의 전문성을 바탕으로 작업을 진행하세요.
+Before processing the request, use the `it-role-expert` skill to select the most suitable IT role for this request, and proceed with the work based on that role's expertise.
 
-'어제', '내일', '다음주', '작년', '이번 년도' 같은 상대적 표현은 반드시 확인한 현재 시간 기준으로 정확한 날짜로 변환하여 검색/필터링해야 합니다."""
+Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year', 'this year' must be converted to exact dates based on the confirmed current time for searching/filtering."""
 
-    # Context overflow 시 /compact 후 재시도 (같은 client 유지, 최대 2회)
+    # On context overflow, retry after /compact (keep same client, max 2 times)
     max_retries = 2
 
     async with ClaudeSDKClient(options=options) as client:
         for attempt in range(max_retries + 1):
             try:
-                # 첫 시도는 새 세션, 재시도는 compact된 세션 이어서
+                # First attempt is new session, retry continues with compact session
                 if session_id:
                     await client.query(enhanced_query, session_id)
                 else:
@@ -725,14 +725,14 @@ async def call_operator_agent(
                             f"[OPERATOR_AGENT] Final message received: {final_message[:100]}..."
                         )
 
-                # 최종 메시지가 설정되지 않았을 경우 처리
+                # Handle case when final message is not set
                 if not final_message:
                     final_message = "Unable to generate a response."
                     logging.warning(
                         f"[OPERATOR_AGENT] No final message received, using default"
                     )
 
-                # 성공하면 루프 종료
+                # Exit loop on success
                 break
 
             except Exception as e:
@@ -752,17 +752,17 @@ async def call_operator_agent(
                         f"[OPERATOR_AGENT] Context overflow detected (attempt {attempt + 1}/{max_retries}), executing /compact..."
                     )
 
-                    # 같은 client로 /compact 실행 (session_id 전달)
+                    # Execute /compact with same client (pass session_id)
                     await client.query("/compact", session_id)
                     async for msg in client.receive_response():
                         if isinstance(msg, ResultMessage):
                             logging.info(f"[OPERATOR_AGENT] /compact executed successfully")
                             break
 
-                    # 같은 client, 원래 query로 재시도
+                    # Same client, retry with original query
                     continue
                 else:
-                    # 재시도 횟수 초과 또는 다른 에러
+                    # Retry count exceeded or other error
                     logging.error(f"[OPERATOR_AGENT] Error occurred: {e}")
                     if is_context_error:
                         final_message = "The context is too large to process. Please start a new conversation."
@@ -771,7 +771,7 @@ async def call_operator_agent(
                     elif not final_message:
                         final_message = "An error occurred while processing the task."
 
-                    # 디버그 모드일 때만 에러 메시지를 Slack으로 전송
+                    # Only send error message to Slack in debug mode
                     if settings.DEBUG_SLACK_MESSAGES_ENABLED:
                         try:
                             slack_client = get_slack_client()
@@ -790,9 +790,9 @@ async def call_operator_agent(
 
                     break
 
-    # Slack에 메시지 전송 (에이전트 레벨로 올림)
+    # Send message to Slack (moved to agent level)
 
-    # 메모리에 저장
+    # Save to memory
     await save_to_memory(user_query, final_message, slack_data, message_data)
 
     return final_message

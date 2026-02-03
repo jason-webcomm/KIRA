@@ -81,11 +81,11 @@ python scripts/search_memory.py /path/to/memory category projects
 memory/
 ├── index.md              # Main navigation and quick reference
 ├── channels/             # Slack channel information
-│   └── C123_마케팅팀.md
+│   └── C123_marketing-team.md
 ├── users/                # Team member profiles
-│   └── U456_김철수.md
+│   └── U456_john-doe.md
 ├── projects/             # Project status and history
-│   ├── 신제품런칭.md
+│   ├── product-launch.md
 │   └── archive/
 ├── tasks/                # Completed and ongoing tasks
 │   ├── ongoing/
@@ -108,16 +108,16 @@ Each memory file follows this structure:
 ---
 type: channel
 channel_id: C01234567
-channel_name: "마케팅팀"
+channel_name: "marketing-team"
 participants: [U01234567, U76543210]
 tags: [marketing, important]
 created: 2025-10-28 10:00:00
 updated: 2025-10-28 15:30:00
 ---
 
-# 마케팅팀 채널
+# Marketing Team Channel
 
-## 커뮤니케이션 지침
+## Communication Guidelines
 
 - Tone: Professional but friendly
 - Response time: Within 1 hour during business hours
@@ -136,30 +136,30 @@ updated: 2025-10-28 15:30:00
 - **Purpose**: Persistent guidelines, preferences, static info
 - **Action**: ALWAYS check if file exists first, then UPDATE it
 - **Examples**:
-  - `channels/C123_마케팅팀.md` - Channel guidelines, members, communication style
-  - `users/U456_김철수.md` - User profile, preferences, work style
+  - `channels/C123_marketing-team.md` - Channel guidelines, members, communication style
+  - `users/U456_john-doe.md` - User profile, preferences, work style
 
 ### 2. Topic Files (Multiple - CREATE New or UPDATE Existing)
 - **Purpose**: Conversations, projects, decisions, meetings
 - **Action**: Create new file per topic, or update if same topic continues
 - **Examples**:
-  - `projects/신제품런칭.md` - Project discussions
-  - `decisions/AWS전환_20251117.md` - Important decisions (date-stamped)
-  - `meetings/2025-11-17-Q4전략회의.md` - Meeting notes
-  - `misc/마케팅팀_일상_20251117.md` - Casual conversations
+  - `projects/product-launch.md` - Project discussions
+  - `decisions/aws-migration_20251117.md` - Important decisions (date-stamped)
+  - `meetings/2025-11-17-q4-strategy.md` - Meeting notes
+  - `misc/marketing-team-chat_20251117.md` - Casual conversations
 
 ### 3. Decision Tree for Classification
 
 ```
 Content type:
 ├─ Channel/User guidelines or preferences?
-│  └─ YES → UPDATE channels/C123_채널명.md or users/U456_유저명.md
+│  └─ YES → UPDATE channels/C123_channel-name.md or users/U456_user-name.md
 │
 └─ NO → What's the main topic?
-    ├─ Project discussion → projects/프로젝트명.md
-    ├─ Important decision → decisions/주제_DATE.md
-    ├─ Meeting notes → meetings/DATE-주제.md
-    ├─ Casual conversation → misc/채널명_DATE.md (or skip if trivial)
+    ├─ Project discussion → projects/project-name.md
+    ├─ Important decision → decisions/topic_DATE.md
+    ├─ Meeting notes → meetings/DATE-topic.md
+    ├─ Casual conversation → misc/channel-name_DATE.md (or skip if trivial)
     └─ Task/feedback/announcement → respective directories
 ```
 
@@ -172,12 +172,12 @@ When receiving Slack message threads:
 1. **Identify context**: Channel, participants, date range
 2. **Extract key info**: Decisions, action items, important discussions
 3. **Classify using Hybrid Strategy** (see Decision Tree above):
-   - Channel guidelines/preferences → **UPDATE** `channels/C123_채널명.md`
-   - User preferences → **UPDATE** `users/U456_유저명.md`
-   - Project-focused → **CREATE/UPDATE** `projects/프로젝트명.md`
-   - Decision-focused → **CREATE** `decisions/주제_DATE.md`
-   - Meeting notes → **CREATE** `meetings/DATE-주제.md`
-   - Casual chat → **CREATE** `misc/채널명_DATE.md` (or skip if not important)
+   - Channel guidelines/preferences → **UPDATE** `channels/C123_channel-name.md`
+   - User preferences → **UPDATE** `users/U456_user-name.md`
+   - Project-focused → **CREATE/UPDATE** `projects/project-name.md`
+   - Decision-focused → **CREATE** `decisions/topic_DATE.md`
+   - Meeting notes → **CREATE** `meetings/DATE-topic.md`
+   - Casual chat → **CREATE** `misc/channel-name_DATE.md` (or skip if not important)
 4. **Format**: Chronological order, preserve thread structure
 5. **Metadata**: channel_id, participants, date_range, message_count, **related_to** (link to profile file)
 
@@ -189,29 +189,29 @@ manager = MemoryManager('/path/to/memory')
 
 # Example 1: Topic file (project discussion)
 manager.add_memory(
-    title="Q4 전략 논의",
+    title="Q4 Strategy Discussion",
     content=formatted_slack_thread,
     metadata={
-        'type': 'project',  # Will create projects/Q4전략논의.md
+        'type': 'project',  # Will create projects/q4-strategy-discussion.md
         'channel_id': 'C123',
-        'channel_name': '마케팅팀',
+        'channel_name': 'marketing-team',
         'participants': ['U01', 'U02'],
         'date_range': '2025-10-28',
         'message_count': 25,
         'tags': ['strategy', 'q4'],
-        'related_to': ['channels/C123_마케팅팀.md']  # Link to channel profile
+        'related_to': ['channels/C123_marketing-team.md']  # Link to channel profile
     }
 )
 
 # Example 2: Profile file (channel guidelines update)
 manager.add_memory(
-    title="마케팅팀",
+    title="Marketing Team",
     content="Channel guidelines: Professional tone, quick response expected",
     metadata={
-        'type': 'channel',  # Will update channels/C123_마케팅팀.md
+        'type': 'channel',  # Will update channels/C123_marketing-team.md
         'channel_id': 'C123',
-        'channel_name': '마케팅팀',
-        'guidelines': {'tone': 'professional', 'response_time': '1시간 이내'}
+        'channel_name': 'marketing-team',
+        'guidelines': {'tone': 'professional', 'response_time': '1 hour'}
     }
 )
 ```
@@ -268,9 +268,9 @@ If `type` field exists in metadata → use directly
 
 ### Level 3: Keyword Analysis
 Scan content for keywords (see `references/classification-guide.md` for full list):
-- "프로젝트", "project", "milestone" → `projects/`
-- "결정", "decision", "승인" → `decisions/`
-- "회의", "meeting" → `meetings/`
+- "project", "milestone" → `projects/`
+- "decision", "approval" → `decisions/`
+- "meeting" → `meetings/`
 - etc.
 
 ### Level 4: Default
@@ -286,7 +286,7 @@ To update an existing file:
 manager = MemoryManager('/path/to/memory')
 manager.update_memory(
     directory='projects',
-    filename='신제품런칭.md',
+    filename='product-launch.md',
     new_content=updated_content,
     new_metadata={'updated': '2025-10-28 16:00:00', 'status': 'completed'}
 )
@@ -300,8 +300,8 @@ Use `related_to` metadata to link related files:
 ---
 type: decision
 related_to:
-  - projects/신제품런칭.md
-  - meetings/2025-10-28-전략회의.md
+  - projects/product-launch.md
+  - meetings/2025-10-28-strategy.md
 ---
 ```
 
@@ -330,8 +330,8 @@ Always include at minimum:
 ### 2. Descriptive Titles
 
 Use clear, descriptive titles:
-- ✅ "Q4 마케팅 전략 회의 - 2025-10-28"
-- ❌ "미팅"
+- ✅ "Q4 Marketing Strategy Meeting - 2025-10-28"
+- ❌ "Meeting"
 
 ### 3. Regular Index Updates
 
@@ -353,8 +353,8 @@ tags: [urgent, marketing, q4, strategy, approval-needed]
 When information is related, add cross-references:
 ```yaml
 related_to:
-  - projects/웹사이트리뉴얼.md
-  - decisions/디자인시스템선택.md
+  - projects/website-redesign.md
+  - decisions/design-system-selection.md
 ```
 
 ## Reference Documents
@@ -372,23 +372,23 @@ For detailed information, see:
 # 1. Format the Slack thread
 slack_content = """
 ## Participants
-- @chulsoo (PM)
+- @john (PM)
 - @sarah (Designer)
 
 ## Discussion
-[10:30] chulsoo: 랜딩 페이지 디자인 리뷰 부탁드립니다
-[10:35] sarah: 확인했습니다. 전반적으로 좋은데 CTA 버튼이 더 눈에 띄었으면 좋겠어요
+[10:30] john: Please review the landing page design
+[10:35] sarah: I've checked it. Overall it looks good, but the CTA button should be more visible
 ...
 """
 
 # 2. Add to memory
 manager.add_memory(
-    title="랜딩 페이지 디자인 리뷰",
+    title="Landing Page Design Review",
     content=slack_content,
     metadata={
         'type': 'project',
         'channel_id': 'C123',
-        'project': '신제품런칭',
+        'project': 'product-launch',
         'participants': ['U01', 'U02'],
         'tags': ['design', 'review', 'landing-page']
     }
@@ -401,13 +401,13 @@ update_index()
 ### Example 2: Quick Information Lookup
 
 ```bash
-# Find all files related to "신제품"
-python scripts/search_memory.py /memory content "신제품"
+# Find all files related to "product"
+python scripts/search_memory.py /memory content "product"
 
 # Results show:
-# 1. projects/신제품런칭.md
-# 2. meetings/2025-10-15-신제품기획회의.md
-# 3. decisions/신제품가격결정.md
+# 1. projects/product-launch.md
+# 2. meetings/2025-10-15-product-planning.md
+# 3. decisions/product-pricing.md
 ```
 
 ### Example 3: Tracking Project Progress
@@ -415,15 +415,15 @@ python scripts/search_memory.py /memory content "신제품"
 ```python
 # Initial project setup
 manager.add_memory(
-    title="신제품 런칭 프로젝트",
+    title="Product Launch Project",
     content="""
 ## Overview
-AI 기반 추천 시스템 개발 및 런칭
+AI-based recommendation system development and launch
 
 ## Milestones
-- [ ] MVP 개발 (2025-11-30)
-- [ ] 베타 테스트 (2025-12-15)
-- [ ] 정식 출시 (2025-12-31)
+- [ ] MVP development (2025-11-30)
+- [ ] Beta testing (2025-12-15)
+- [ ] Official launch (2025-12-31)
     """,
     metadata={
         'type': 'project',
@@ -436,7 +436,7 @@ AI 기반 추천 시스템 개발 및 런칭
 # Later: Update progress
 manager.update_memory(
     'projects',
-    '신제품런칭프로젝트.md',
+    'product-launch.md',
     updated_content_with_progress,
     {'updated': '2025-10-28', 'status': 'on_track'}
 )

@@ -1,7 +1,7 @@
 """
-프롬프트 생성 함수들
+Prompt Generation Functions
 
-이 모듈은 Claude SDK 에이전트에서 사용하는 system prompt와 state prompt를 생성합니다.
+This module generates system prompts and state prompts used by Claude SDK agents.
 """
 
 import json
@@ -12,19 +12,19 @@ from app.cc_utils.language_helper import detect_language
 
 
 def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optional[dict] = None) -> str:
-    """Slack API 데이터와 현재 메시지 정보를 바탕으로 state prompt 생성
+    """Generate state prompt based on Slack API data and current message information
 
     Args:
-        slack_data: Slack API로부터 받은 데이터 (채널, 멤버, 최근 메시지 등). None이면 생략됨
-        message_data: 현재 메시지 정보 (user_id, text, channel_id, thread_ts 등). None이면 생략됨
+        slack_data: Data received from Slack API (channel, members, recent messages, etc.). Skipped if None
+        message_data: Current message information (user_id, text, channel_id, thread_ts, etc.). Skipped if None
 
     Returns:
-        str: 에이전트가 현재 상태를 이해하기 위한 프롬프트
+        str: Prompt for agent to understand current state
     """
-    # 파일 시스템 기본 디렉토리
+    # Filesystem base directory
     settings = get_settings()
     filesystem_base_dir = settings.FILESYSTEM_BASE_DIR or os.getcwd()
-    bot_name = settings.BOT_NAME or "봇"
+    bot_name = settings.BOT_NAME or "bot"
     bot_email = settings.BOT_EMAIL or ""
     bot_organization = settings.BOT_ORGANIZATION or "Your Organization"
     bot_team = settings.BOT_TEAM or ""
@@ -32,7 +32,7 @@ def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optiona
     authorized_users_kr = settings.BOT_AUTHORIZED_USERS_KR or ""
     confluence_default_page_id = settings.ATLASSIAN_CONFLUENCE_DEFAULT_PAGE_ID or ""
 
-    # combined_data 구성 (None이 아닌 것만 포함)
+    # Build combined_data (only include non-None values)
     combined_data = {
         "filesystem_base_dir": filesystem_base_dir
     }
@@ -43,57 +43,57 @@ def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optiona
 
     state_json = json.dumps(combined_data, ensure_ascii=False, indent=2)
 
-    # 섹션 구성 (동적 번호 매기기)
+    # Build sections (dynamic numbering)
     sections = []
     section_num = 0
 
-    # 0. 당신의 정체성 (항상 포함)
-    sections.append(f"""### {section_num}. 당신의 정체성
-- 이름: {bot_name}
-- 이메일: {bot_email}
-- 소속 조직: {bot_organization}
-- 소속 팀: {bot_team}
-- 업무 이해관계자 (영문): {authorized_users_en}
-- 업무 이해관계자 (한글): {authorized_users_kr}""")
+    # 0. Your Identity (always included)
+    sections.append(f"""### {section_num}. Your Identity
+- Name: {bot_name}
+- Email: {bot_email}
+- Organization: {bot_organization}
+- Team: {bot_team}
+- Business Stakeholders (English): {authorized_users_en}
+- Business Stakeholders (Korean): {authorized_users_kr}""")
     section_num += 1
 
-    # 1. slack_data가 있을 때만 채널 정보 추가
+    # 1. Channel information (only when slack_data is present)
     if slack_data is not None:
-        sections.append(f"""### {section_num}. 채널 정보 (slack_data):
-- `channel`: 현재 채널의 기본 정보 (이름, 타입, 주제, 목적, 멤버 수)
-- `members`: 채널에 속한 사용자들의 정보 (user_id, real_name, display_name, email)
-- `recent_messages`: 최근 대화 내역 ("[사용자명]: 메시지 내용" 형식)""")
+        sections.append(f"""### {section_num}. Channel Information (slack_data):
+- `channel`: Current channel basic info (name, type, topic, purpose, member count)
+- `members`: Users in the channel (user_id, real_name, display_name, email)
+- `recent_messages`: Recent conversation history ("[username]: message content" format)""")
         section_num += 1
 
-    # 2. message_data가 있을 때만 현재 메시지 추가
+    # 2. Current message (only when message_data is present)
     if message_data is not None:
-        sections.append(f"""### {section_num}. 현재 메시지 (current_message):
-- `user_id`: 메시지를 보낸 사용자의 Slack ID
-- `user_text`: 사용자가 보낸 메시지 내용
-- `channel_id`: 메시지가 발생한 채널 ID
-- `thread_ts`: 스레드 내 메시지인 경우에만 값 존재
-- `message_ts`: 이 메시지의 타임스탬프
-- `files`: 첨부된 파일 정보 (존재하는 경우). 파일명, URL, MIME 타입 등이 포함됩니다.""")
+        sections.append(f"""### {section_num}. Current Message (current_message):
+- `user_id`: Slack ID of the user who sent the message
+- `user_text`: Content of the message sent by the user
+- `channel_id`: Channel ID where the message was sent
+- `thread_ts`: Only present for thread messages
+- `message_ts`: Timestamp of this message
+- `files`: Attached file information (if present). Includes filename, URL, MIME type, etc.""")
         section_num += 1
 
-    # 3. 파일 시스템 정보 (항상 포함)
-    sections.append(f"""### {section_num}. 파일 시스템 정보 (FILESYSTEM_BASE_DIR):
-- 이 디렉토리는 파일을 생성하거나 저장할 때 사용하는 기본 경로입니다.
-- 파일 작업 시 이 경로를 기준으로 하위 폴더를 만들어 사용하세요.""")
+    # 3. File system information (always included)
+    sections.append(f"""### {section_num}. File System Information (FILESYSTEM_BASE_DIR):
+- This directory is the base path used for creating or saving files.
+- When working with files, use this path as the base and create subfolders as needed.""")
     section_num += 1
 
-    # 4. Confluence 기본 페이지 (설정되어 있을 때만)
+    # 4. Confluence Default Page (only when configured)
     if confluence_default_page_id:
-        sections.append(f"""### {section_num}. Confluence 기본 페이지:
-- 사용자가 "위키에 올려줘", "Confluence에 작성해줘" 등으로 요청하면 페이지 ID `{confluence_default_page_id}`를 사용하세요.
-- 명시적으로 다른 페이지를 지정하지 않는 한, 이 페이지의 하위 페이지를 만들어 작성합니다.""")
+        sections.append(f"""### {section_num}. Confluence Default Page:
+- When user requests "upload to wiki", "write to Confluence", etc., use page ID `{confluence_default_page_id}`.
+- Unless explicitly specifying a different page, create subpages under this page.""")
         section_num += 1
 
-    # 5. 응답 언어 감지
+    # 5. Response language detection
     user_text = message_data.get("user_text", "") if message_data else ""
     response_language = detect_language(user_text)
 
-    # 根據檢測到的語言提供更明確的指示
+    # Provide more explicit instructions based on detected language
     if response_language == "Traditional Chinese":
         response_instruction = "Traditional Chinese (繁體中文)"
     elif response_language == "Korean":
@@ -105,7 +105,7 @@ def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optiona
 ## RESPONSE LANGUAGE
 You MUST respond in {response_instruction}. This is a critical requirement.
 
-## 作業執行所需的狀態資訊:
+## State Information Required for Task Execution:
 <state_data>
 {chr(10).join(sections)}
 

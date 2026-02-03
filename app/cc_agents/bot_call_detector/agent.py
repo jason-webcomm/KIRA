@@ -1,7 +1,7 @@
 """
-봇 호출 감지 에이전트 (Bot Call Detector Agent)
+Bot Call Detector Agent
 
-이 모듈은 메시지가 봇을 직접 호출하는 것인지 판단합니다.
+This module determines whether a message is directly calling the bot.
 """
 
 import logging
@@ -18,22 +18,22 @@ from app.cc_utils.language_helper import detect_language
 
 
 def create_system_prompt(bot_name: str) -> str:
-    """봇 호출 감지를 위한 system prompt 생성
+    """Create system prompt for bot call detection.
 
     Args:
-        bot_name: 봇의 이름
+        bot_name: The name of the bot
 
     Returns:
-        str: 봇 호출 감지를 위한 system prompt
+        str: System prompt for bot call detection
     """
-    # 한글 이름인 경우만 줄임말 생성
+    # Create abbreviated name only for Korean names
     is_korean_name = detect_language(bot_name) == "Korean" if bot_name else False
     bot_short_name = bot_name[1:] if is_korean_name and len(bot_name) > 2 else None
 
-    # 줄임말 설명
-    short_name_desc = f' 혹은 "{bot_short_name}"' if bot_short_name else ''
+    # Abbreviated name description
+    short_name_desc = f' or "{bot_short_name}"' if bot_short_name else ''
 
-    # 한글 패턴
+    # Korean patterns
     korean_patterns = f'"{bot_name}", "{bot_name}야", "{bot_name}아", "{bot_name}씨", "{bot_name}님"'
     if bot_short_name:
         korean_patterns += f'\n  - "{bot_short_name}", "{bot_short_name}야", "{bot_short_name}아", "{bot_short_name}씨", "{bot_short_name}님"'
@@ -69,14 +69,14 @@ async def call_bot_call_detector(
     bot_name: str = None
 ) -> bool:
     """
-    봇 호출 감지 에이전트를 실행합니다.
+    Execute the bot call detection agent.
 
     Args:
-        message_text: 사용자가 보낸 메시지 텍스트
-        bot_name: 봇의 이름 (기본값: settings에서 가져옴)
+        message_text: The message text sent by the user
+        bot_name: The name of the bot (default: from settings)
 
     Returns:
-        bool: 봇이 호출되었는지 여부
+        bool: Whether the bot was called
     """
     settings = get_settings()
     if not bot_name:
