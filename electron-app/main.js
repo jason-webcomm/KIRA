@@ -716,6 +716,7 @@ function registerIPCHandlers() {
       '능동 수신 채널 - Confluence': ['CONFLUENCE_CHECK_ENABLED', 'CONFLUENCE_CHECK_INTERVAL', 'CONFLUENCE_CHECK_HOURS'],
       '능동 수신 채널 - Jira': ['JIRA_CHECK_ENABLED', 'JIRA_CHECK_INTERVAL'],
       '선제적 제안 기능': ['DYNAMIC_SUGGESTER_ENABLED', 'DYNAMIC_SUGGESTER_INTERVAL'],
+      'AutoMem 기억 증강': ['AUTOMEM_ENABLED', 'AUTOMEM_HOST', 'AUTOMEM_API_KEY'],
       '디버그': ['DEBUG_SLACK_MESSAGES_ENABLED']
     };
 

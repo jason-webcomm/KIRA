@@ -138,6 +138,11 @@ class Settings(BaseSettings):
     # Debug
     DEBUG_SLACK_MESSAGES_ENABLED: bool = False
 
+    # AutoMem Configuration
+    AUTOMEM_ENABLED: bool = False
+    AUTOMEM_HOST: str = "localhost"
+    AUTOMEM_API_KEY: str = ""
+
     def model_post_init(self, __context):
         load_dotenv("app/config/env/dev.env", override=True)
 

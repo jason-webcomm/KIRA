@@ -145,6 +145,10 @@ const fields = [
   // Proactive Suggestions
   'DYNAMIC_SUGGESTER_ENABLED',
   'DYNAMIC_SUGGESTER_INTERVAL',
+  // AutoMem
+  'AUTOMEM_ENABLED',
+  'AUTOMEM_HOST',
+  'AUTOMEM_API_KEY',
   // Debug
   'DEBUG_SLACK_MESSAGES_ENABLED'
 ];
@@ -171,6 +175,11 @@ const voiceChannelMapping = {
 // Suggester checkbox to fields mapping
 const suggesterMapping = {
   'DYNAMIC_SUGGESTER_ENABLED': 'suggester'
+};
+
+// AutoMem checkbox to fields mapping
+const automemMapping = {
+  'AUTOMEM_ENABLED': 'automem'
 };
 
 let serverRunning = false;
@@ -303,6 +312,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize Suggester field visibility
   initializeSuggesterFields();
+
+  // Initialize AutoMem field visibility
+  initializeAutoMemFields();
 
   // Initialize Auth fields visibility (Slack/MS365)
   initializeAuthFields();
@@ -451,6 +463,16 @@ function setupEventListeners() {
     if (checkbox) {
       checkbox.addEventListener('change', () => {
         toggleSuggesterFields(checkboxId, checkbox.checked);
+      });
+    }
+  });
+
+  // AutoMem checkbox toggles
+  Object.keys(automemMapping).forEach(checkboxId => {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+      checkbox.addEventListener('change', () => {
+        toggleAutoMemFields(checkboxId, checkbox.checked);
       });
     }
   });
@@ -617,6 +639,26 @@ function initializeSuggesterFields() {
     const checkbox = document.getElementById(checkboxId);
     if (checkbox) {
       toggleSuggesterFields(checkboxId, checkbox.checked);
+    }
+  });
+}
+
+// Toggle AutoMem fields visibility
+function toggleAutoMemFields(checkboxId, enabled) {
+  const automemType = automemMapping[checkboxId];
+  const fieldsContainer = document.querySelector(`[data-automem="${automemType}"]`);
+
+  if (fieldsContainer) {
+    fieldsContainer.style.display = enabled ? 'block' : 'none';
+  }
+}
+
+// Initialize AutoMem field visibility based on checkbox state
+function initializeAutoMemFields() {
+  Object.keys(automemMapping).forEach(checkboxId => {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox) {
+      toggleAutoMemFields(checkboxId, checkbox.checked);
     }
   });
 }

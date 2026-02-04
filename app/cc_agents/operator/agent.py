@@ -209,6 +209,20 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
         except json.JSONDecodeError as e:
             logging.warning(f"[OPERATOR_AGENT] Failed to parse REMOTE_MCP_SERVERS: {e}")
 
+    # AutoMem Memory MCP
+    if settings.AUTOMEM_ENABLED:
+        logger.info(f"[MCP_CONFIG] AutoMem MCP enabled: HOST={settings.AUTOMEM_HOST}")
+        mcp_servers["memory"] = {
+            "command": "npx",
+            "args": ["-y", "@verygoodplugins/mcp-automem"],
+            "env": {
+                "AUTOMEM_ENDPOINT": f"http://{settings.AUTOMEM_HOST}:8001",
+                "AUTOMEM_API_KEY": settings.AUTOMEM_API_KEY or "",
+            }
+        }
+    else:
+        logger.info("[MCP_CONFIG] AutoMem MCP disabled")
+
     return mcp_servers
 
 
@@ -506,6 +520,37 @@ Accurately and efficiently handle colleague requests and respond through **Slack
 </how_to_use_skill>
 
 {tool_usage_rules}
+
+## AutoMem Memory System
+<memory_instructions>
+When AutoMem MCP is available, use it for persistent, cross-session memory:
+
+### When to Store
+- User preferences and working patterns
+- Technical decisions and their rationale
+- Bug workarounds and solutions
+- Project-specific conventions
+
+### How to Store
+Use `mcp__memory__store_memory`:
+- Content: Brief summary (150-300 chars)
+- Tags: ["project-name", "category"]
+- Importance: 0.5-0.9 (0.9=critical, 0.7=patterns, 0.5=context)
+- Metadata: {{"source": "slack", "channel": "...", "user": "..."}}
+
+### How to Recall
+Use `mcp__memory__recall_memory`:
+- query: Natural language search
+- tags: Filter by project/category
+- expand_entities: true for related memories
+
+### How to Associate
+Use `mcp__memory__associate_memories`:
+- RELATES_TO: General connection
+- PREFERS_OVER: This is a better approach
+- EXEMPLIFIES: This is an example of pattern
+- PART_OF: This is part of a larger effort
+</memory_instructions>
 
 ## SLACK Response Guide for Colleague Requests
 <slack_answer_guide>

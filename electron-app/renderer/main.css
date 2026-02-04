@@ -219,6 +219,20 @@ body {
   border: 1px solid rgba(88, 101, 242, 0.3);
 }
 
+.optional-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border-radius: 10px;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
 .form-group {
   margin-bottom: 20px;
 }

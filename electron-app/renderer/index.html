@@ -673,6 +673,37 @@
           </section>
 
           <section class="section">
+            <h3>AutoMem 기억 증강 <span class="optional-chip">선택</span></h3>
+
+            <div class="info-box">
+              AutoMem Docker 서비스를 먼저 실행해야 합니다.
+              <a href="https://github.com/verygoodplugins/automem" target="_blank">了解更多</a>
+            </div>
+
+            <div class="mcp-item">
+              <div class="mcp-header">
+                <span class="mcp-title">AutoMem</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="AUTOMEM_ENABLED">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="mcp-fields" data-automem="automem" style="display: none;">
+                <div class="form-group">
+                  <label for="AUTOMEM_HOST">AutoMem Host</label>
+                  <input type="text" id="AUTOMEM_HOST" placeholder="localhost" value="localhost">
+                  <small class="form-hint">AutoMem Docker 서비스가 실행 중인 호스트</small>
+                </div>
+                <div class="form-group">
+                  <label for="AUTOMEM_API_KEY">API Key (선택)</label>
+                  <input type="password" id="AUTOMEM_API_KEY" placeholder="">
+                  <small class="form-hint">AutoMem 서비스에 인증이 필요한 경우 입력</small>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
             <h3 data-i18n="settings.sections.debug">디버그</h3>
 
             <div class="toggle-item">
