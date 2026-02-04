@@ -1,10 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read version from electron-app/package.json
-const electronPkgPath = path.join(__dirname, '../../electron-app/package.json');
-const electronPkg = JSON.parse(fs.readFileSync(electronPkgPath, 'utf8'));
-const version = electronPkg.version;
+// Get version from command line argument or environment variable or package.json
+let version = process.argv[2] || process.env.VERSION;
+
+if (!version) {
+  // Fallback: Read version from electron-app/package.json
+  const electronPkgPath = path.join(__dirname, '../../electron-app/package.json');
+  const electronPkg = JSON.parse(fs.readFileSync(electronPkgPath, 'utf8'));
+  version = electronPkg.version;
+}
 
 console.log(`Syncing version: ${version}`);
 
@@ -18,7 +23,8 @@ const files = [
 
 // Regex to match version patterns
 const patterns = [
-  { regex: /KIRA-\d+\.\d+\.\d+-(universal|arm64)\.dmg/g, replace: `KIRA-${version}-arm64.dmg` }
+  { regex: /KIRA-\d+\.\d+\.\d+-(universal|arm64)\.dmg/g, replace: `KIRA-${version}-arm64.dmg` },
+  { regex: /KIRA[- ]Setup[- ]\d+\.\d+\.\d+\.exe/g, replace: `KIRA Setup ${version}.exe` }
 ];
 
 let updated = 0;

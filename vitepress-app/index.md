@@ -28,8 +28,11 @@ hero:
       text: GitHub
       link: https://github.com/krafton-ai/kira
     - theme: alt
-      text: KIRA for macOS (Apple Silicon)
+      text: macOS (Apple Silicon)
       link: https://kira.krafton-ai.com/download/KIRA-0.1.7-arm64.dmg
+    - theme: alt
+      text: Windows
+      link: https://kira.krafton-ai.com/download/KIRA Setup 0.1.7.exe
 
 features:
   - icon: 💬
@@ -61,8 +64,12 @@ features:
     details: No coding or server configuration needed. Manage everything through an easy GUI.
 
   - icon: 🔒
-    title: Local First
-    details: All data is stored on your computer. Privacy protection is built in.
+    title: Privacy First
+    details: All data and memory stored locally — no third-party services involved. Your API key, your data, your control.
+
+  - icon: 🔑
+    title: Bring Your Own API Key
+    details: Transparent, pay-as-you-go costs with your own Claude API key — no subscriptions or hidden fees.
 ---
 
 ## 💡 What is KIRA?
@@ -112,13 +119,9 @@ KIRA is currently in beta. A few things to note:
 
 Getting started with KIRA is really simple:
 
-1. **Download the app**: Download the macOS installer
+1. **Download the app**: Download the installer for your platform (macOS or Windows)
 2. **Install**: Install it like any regular app
 3. **Connect Slack**: Open the app and just enter your Slack tokens!
-
-::: tip macOS Only
-KIRA currently supports macOS 10.15 (Catalina) or later only.
-:::
 
 ::: warning Claude Pro Plan Required
 KIRA uses Claude Code internally, which requires a **Claude Pro plan or higher**. [Learn more about Claude plans](https://www.anthropic.com/pricing)
@@ -149,8 +152,8 @@ No servers, cloud configuration, or terminal commands needed. Install the app an
 ### 💰 **Reasonable Cost**
 Use your own Claude API key, so you only pay for what you use. No subscriptions or hidden fees.
 
-### 🏠 **Your Data is Yours**
-All memory and data is stored on your computer. No worries about data leaks.
+### 🔒 **Privacy First**
+All memory, logs, and settings stored locally on your machine. Direct communication with Claude API — no intermediary services. Your data never passes through third-party servers.
 
 ### 🔌 **Rich Integrations**
 Connect directly with work tools like Slack, Outlook, Confluence, Jira, GitLab, X, and more.
