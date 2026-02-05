@@ -5,7 +5,15 @@
   "nav": {
     "start": "開始活動",
     "settings": "環境變數設定",
-    "model": "模型設定"
+    "model": "模型設定",
+    "chat": "對話"
+  },
+  "chat": {
+    "title": "直接與 KIRA 對話",
+    "subtitle": "不用 Slack 也能對話",
+    "placeholder": "輸入訊息...",
+    "send": "發送",
+    "error": "發送失敗，請確認伺服器已啟動"
   },
   "landing": {
     "preparing": "{{botName}} 正在準備工作。",

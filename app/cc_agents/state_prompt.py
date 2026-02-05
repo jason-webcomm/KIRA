@@ -59,10 +59,20 @@ def create_state_prompt(slack_data: Optional[dict] = None, message_data: Optiona
 
     # 1. Channel information (only when slack_data is present)
     if slack_data is not None:
+        # Check if this is a chat message (desktop chat)
+        is_chat_message = slack_data.get("is_chat_message", False)
+
+        channel_info = ""
+        if is_chat_message:
+            channel_info = f"""- This is a **desktop chat** message (not from Slack)
+- Use `mcp__answer__answer` with `channel_type="console"` for responses
+- For desktop chat, only `text` parameter is required"""
+
         sections.append(f"""### {section_num}. Channel Information (slack_data):
 - `channel`: Current channel basic info (name, type, topic, purpose, member count)
 - `members`: Users in the channel (user_id, real_name, display_name, email)
-- `recent_messages`: Recent conversation history ("[username]: message content" format)""")
+- `recent_messages`: Recent conversation history ("[username]: message content" format)
+{channel_info}""")
         section_num += 1
 
     # 2. Current message (only when message_data is present)

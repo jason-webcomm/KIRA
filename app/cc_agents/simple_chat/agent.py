@@ -15,6 +15,7 @@ from claude_agent_sdk import (
 )
 
 from app.cc_tools.slack.slack_tools import create_slack_mcp_server
+from app.cc_tools.answer import create_answer_mcp_server
 from app.config.settings import get_settings
 from app.cc_agents.state_prompt import create_state_prompt
 
@@ -46,7 +47,7 @@ def create_system_prompt(state_prompt: str) -> str:
 {role_section}
 
 # Basic Guidelines
-Analyze colleague requests - respond directly to simple conversations via **Slack tools** and return true.
+Analyze colleague requests - respond directly to simple conversations via **the unified answer tool** and return true.
 Return false for complex tasks so that junior agents can handle them.
 
 {state_prompt}
@@ -55,13 +56,13 @@ Return false for complex tasks so that junior agents can handle them.
 <important_actions>
 1. Always check the "Relevant Memory" section in state_data. The predecessor agent has organized the memory needed for the request.
 2. Always verify the current time using `mcp__time__*` before proceeding with any task.
-3. Always respond using `mcp__slack__answer` tool, even when the request is unclear, the task is not possible, or you need to suggest options.
-4. NEVER skip responding to colleague requests. Call `mcp__slack__answer` tool at least once.
+3. Always respond using `mcp__answer__answer` tool, even when the request is unclear, the task is not possible, or you need to suggest options.
+4. NEVER skip responding to colleague requests. Call `mcp__answer__answer` tool at least once.
 5. For simple conversations:
-   - Send response using `mcp__slack__answer` (use parameters from state_data)
+   - Send response using `mcp__answer__answer` (use parameters from state_data)
    - Must output "true" after responding
 6. For complex tasks:
-   - Send appropriate waiting message for colleague requests using `mcp__slack__answer` (use parameters from state_data)
+   - Send appropriate waiting message for colleague requests using `mcp__answer__answer` (use parameters from state_data)
    - Must output "false" after responding
 7. Judge user requests based on the task complexity criteria below.
 </important_actions>
@@ -107,7 +108,9 @@ Return false for complex tasks so that junior agents can handle them.
 ## Tool Usage Principles
 <how_to_use_tool>
 - When performing a request, first check the current time using `mcp__time__get_current_time`, and use that time as the basis for information search. Relative expressions like 'yesterday', 'tomorrow', 'next week', 'last year', 'this year' must be converted to exact dates based on the confirmed current time for search/filtering.
-- When using `mcp__slack__answer`, take parameters from state_data.
+- Use `mcp__answer__answer` to send responses:
+  - For Slack messages: `{{"channel_type": "slack", "channel_id": "...", "text": "...", "message_ts": "...", "channel_type_value": "..."}}`
+  - For console: `{{"channel_type": "console", "text": "..."}}`
 </how_to_use_tool>
 
 ## Output Format
@@ -160,12 +163,13 @@ async def call_simple_chat(
                 "args": ["-y", "@mcpcentral/mcp-time"]
             },
             "slack": create_slack_mcp_server(),
+            "answer": create_answer_mcp_server(),
         },
         system_prompt=system_prompt,
         model=settings.MODEL_FOR_SIMPLE,
         permission_mode="bypassPermissions",
         allowed_tools=[
-            "mcp__slack__answer",
+            "mcp__answer__answer",
             "WebFetch",
         ],
         disallowed_tools=[

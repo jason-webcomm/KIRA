@@ -5,7 +5,15 @@
   "nav": {
     "start": "활동 시작",
     "settings": "환경변수 설정",
-    "model": "모델 설정"
+    "model": "모델 설정",
+    "chat": "대화"
+  },
+  "chat": {
+    "title": "KIRA 직접 대화",
+    "subtitle": "Slack 없이 바로 대화하기",
+    "placeholder": "메시지를 입력하세요...",
+    "send": "전송",
+    "error": "전송 실패. 서버가 실행 중인지 확인하세요."
   },
   "landing": {
     "preparing": "{{botName}}님이 업무를 준비 중입니다.",

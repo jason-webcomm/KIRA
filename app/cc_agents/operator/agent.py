@@ -24,6 +24,7 @@ from app.cc_tools.meeting_transcription.meeting_transcription_tools import (
 )
 from app.cc_tools.deepl.deepl_tools import create_deepl_tools_server
 from app.cc_tools.files.files_tools import create_files_mcp_server
+from app.cc_tools.answer import create_answer_mcp_server
 from app.config.settings import get_settings, Settings
 from app.cc_agents.state_prompt import create_state_prompt
 from app.cc_utils.language_helper import detect_language
@@ -47,6 +48,7 @@ def build_mcp_servers_dict(settings: Settings) -> dict:
         "slack": create_slack_mcp_server(),
         "scheduler": create_scheduler_mcp_server(),
         "files": create_files_mcp_server(),
+        "answer": create_answer_mcp_server(),
         "time": {"command": "npx", "args": ["-y", "@mcpcentral/mcp-time"]},
         "context7": {"command": "npx", "args": ["-y", "@upstash/context7-mcp"]},
         "arxiv": {
@@ -241,12 +243,15 @@ def build_tool_usage_rules(settings: Settings) -> str:
     rules = f"""## Tool Usage Principles
 <how_to_use_tool>
 - Before performing a request, first check the current time using `mcp__time__get_current_time`, and use that as the reference for information gathering. Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year', 'this year' must be converted to exact dates based on the confirmed current time for searching/filtering.
-- When using `mcp__slack__answer`, include the tool call results, sources, and links as detailed as possible without omission.
+- **CRITICAL**: You MUST CALL `mcp__answer__answer` to send responses. Do not just talk about using the tool - actually invoke it!
+  - For Slack messages: `mcp__answer__answer({{"channel_type": "slack", "channel_id": "...", "text": "...", "message_ts": "...", "channel_type_value": "..."}})`
+  - For console/desktop chat: `mcp__answer__answer({{"channel_type": "console", "text": "..."}})`
+- When using `mcp__answer__answer` for Slack, include the tool call results, sources, and links as detailed as possible without omission.
 - When a user uploads a file and a Slack file URL is provided, use `mcp__slack__download_file_to_channel` to download the file before processing.
 - `<!subteam^slack_group_id>` format represents a group tag. When this group tag is included in the input, call `mcp__slack__get_usergroup_members` tool first, read the user information in the group, then execute the instruction.
 - When you need to reference longer conversation context or full thread conversations, call `mcp__slack__get_thread_replies` tool to retrieve the data.
 - If tool calls reach 3 or more, you can use `mcp__slack__answer_with_emoji` to briefly indicate the work status.
-- If tool calls reach 8 or more, you can use `mcp__slack__answer` for intermediate reporting. However, **when the task is complete, you MUST use `mcp__slack__answer` one more time to provide the final result.** Do not just do intermediate reporting and finish.
+- If tool calls reach 8 or more, you can use `mcp__answer__answer` for intermediate reporting. However, **when the task is complete, you MUST use `mcp__answer__answer` one more time to provide the final result.** Do not just do intermediate reporting and finish.
 - When forwarding messages to others, use `mcp__slack__forward_message`. If a response is needed for the message forwarding, set `request_answer=True`.
   - **No Duplicate Sending**: When sending the same message to multiple people, do NOT call `mcp__slack__forward_message` multiple times. Include all recipients in the respondents list and call it **only once**.
   - **No Personalization**: Do not add personalized greetings (e.g., "Hello, XXX"). Send the same message to all recipients.
@@ -486,7 +491,7 @@ def create_system_prompt(state_prompt: str) -> str:
     system_prompt = f"""You are {bot_name}, a virtual resident employee who communicates via Slack.
 
 # Basic Guidelines
-Accurately and efficiently handle colleague requests and respond through **Slack tools**, organizing work processing records.
+Accurately and efficiently handle colleague requests and respond through **the unified answer tool**, organizing work processing records.
 {role_section}
 
 {state_prompt}
@@ -494,20 +499,20 @@ Accurately and efficiently handle colleague requests and respond through **Slack
 ## Core Behavioral Principles
 <important_actions>
 1. Check the "Related Memory" section in state_data. The previous agent has organized the memory needed for the request.
-2. You MUST call the `mcp__slack__answer` tool at least once. **CRITICAL: You MUST call the `mcp__slack__answer` tool at least once to send your response to Slack. This is mandatory.**
-3. Respond using the `mcp__slack__answer` tool even when requests are unclear, tasks are impossible, or you need to suggest options.
-4. Even when a task fails, use `mcp__slack__answer` to provide failure reasons and alternatives.
+2. **Response Handling - CRITICAL**:
+   - For Slack messages: You MUST CALL `mcp__answer__answer` with `channel_type="slack"`. Do not output text directly!
+   - For console/desktop chat: You MUST CALL `mcp__answer__answer` with `channel_type="console"`. Do not output text directly! The tool will output to stdout.
+   - Example for console: `mcp__answer__answer({{"channel_type": "console", "text": "現在是下午 4 點"}})`
+3. Respond using the appropriate method even when requests are unclear, tasks are impossible, or you need to suggest options.
+4. Even when a task fails, provide failure reasons and alternatives in your response.
 5. File operation paths:
    - Permanent storage files: FILESYSTEM_BASE_DIR/files/{{channel_id}}/
    - Temporary files: FILESYSTEM_BASE_DIR/files/{{channel_id}}/tmp/ (must delete after task completion)
-   - Files created must be uploaded to Slack using `mcp__slack__upload_file`.
+   - Files created must be uploaded to Slack using `mcp__slack__upload_file` (for Slack messages).
    - Ensure Korean text does not corrupt when creating files. Use `encoding='utf-8'` for text files. For PDF, refer to the `pdf` skill's Korean Font Support.
 6. When users request "remember this" or "save this", respond positively. Actual storage is automatically handled by the next memory agent.
    - For requests like "keep it for me" or "store this" with files: Download the file using `mcp__slack__download_file_to_channel` and save to FILESYSTEM_BASE_DIR/files/{{channel_id}}/, then respond with a confirmation message.
-7. Respond to colleague requests using `mcp__slack__answer` and `mcp__slack__upload_file`
-   - Use `mcp__slack__answer` tool for text responses. If the answer is long, split into multiple calls. Avoid multiple calls with duplicate content. Use parameters from state_data.
-   - Use `mcp__slack__upload_file` tool for file responses. If there are many files, split into multiple calls. Use parameters from state_data.
-8. Upon task completion, return work history including the following information. It will be saved to memory:
+7. Upon task completion, return work history including the following information. It will be saved to memory:
     - Tools used and result summary
     - Sources and links
     - Response details to colleague requests
@@ -517,6 +522,10 @@ Accurately and efficiently handle colleague requests and respond through **Slack
 <how_to_use_skill>
 1. When working with PPT, DOCX, PDF, XLSX documents, you MUST use `ppt`, `docx`, `pdf`, `xlsx` skills. Set the author to "{bot_name}" unless otherwise specified.
 2. For memory/record cleanup requests like "organize memories" or "cleanup memory", use the `slack-memory-cleanup` skill.
+3. **CRITICAL - Response Handling**: You MUST CALL `mcp__answer__answer` tool to send responses. Do NOT just describe what you would do - actually invoke the tool!
+   - For console messages: `mcp__answer__answer({{"channel_type": "console", "text": "Your response"}})`
+   - For Slack messages: `mcp__answer__answer({{"channel_type": "slack", "channel_id": "...", "text": "...", "message_ts": "..."}})`
+   - For file uploads to Slack, use `mcp__slack__upload_file`
 </how_to_use_skill>
 
 {tool_usage_rules}
@@ -602,6 +611,24 @@ async def call_operator_agent(
     """
 
     state_prompt = create_state_prompt(slack_data, message_data)
+
+    # Add channel type info for response handling
+    is_chat_message = slack_data.get("is_chat_message", False)
+    if is_chat_message:
+        # Add channel type specific instructions (using regular string to avoid backtick issues)
+        channel_instructions = """
+
+## Message Channel
+This is a desktop chat message (not from Slack).
+
+**Response Method:**
+- Use mcp__answer__answer with channel_type="console"
+- Only "text" parameter is required, no "channel_id" needed
+- Example: {"channel_type": "console", "text": "Your response here"}
+
+The response will be automatically delivered to the Electron app.
+"""
+        state_prompt += channel_instructions
 
     # Add memory to state_prompt if exists
     no_memory_messages = [
@@ -733,8 +760,17 @@ async def call_operator_agent(
     final_message = ""
     from devtools import pprint
 
-    # Add role selection instruction to user_query
-    enhanced_query = f"""{user_query}
+    # For chat messages, skip the it-role-expert instruction to avoid overthinking
+    is_chat_message = slack_data.get("is_chat_message", False)
+
+    if is_chat_message:
+        # Simple query - no role selection needed
+        enhanced_query = f"""{user_query}
+
+Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year', 'this year' must be converted to exact dates based on the confirmed current time for searching/filtering."""
+    else:
+        # Complex request - use it-role-expert skill
+        enhanced_query = f"""{user_query}
 
 Before processing the request, use the `it-role-expert` skill to select the most suitable IT role for this request, and proceed with the work based on that role's expertise.
 
@@ -757,7 +793,8 @@ Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year'
                         session_id = message.data.get("session_id")
                         logging.info(f"[OPERATOR_AGENT] Session ID: {session_id}")
 
-                    pprint(message)
+                    # Remove pprint to avoid outputting Claude SDK internal messages
+                    # pprint(message)
 
                     if type(message) is ResultMessage:
                         if "API Error" in message.result and "413" in message.result:
@@ -766,8 +803,14 @@ Relative time expressions like 'yesterday', 'tomorrow', 'next week', 'last year'
                             )
 
                         final_message = message.result
+                        # Debug: log full response to see if [/CHAT] exists
+                        if "[/CHAT]" in message.result:
+                            logging.info(f"[OPERATOR_AGENT] Found [/CHAT] marker in response")
+                            idx = message.result.index("[/CHAT]")
+                            logging.info(f"[OPERATOR_AGENT] Before [/CHAT]: {message.result[idx-100:idx]}")
+                            logging.info(f"[OPERATOR_AGENT] After [/CHAT]: {message.result[idx+10:idx+110]}")
                         logging.info(
-                            f"[OPERATOR_AGENT] Final message received: {final_message[:100]}..."
+                            f"[OPERATOR_AGENT] Final message received (len={len(message.result)}): {final_message[:100]}..."
                         )
 
                 # Handle case when final message is not set

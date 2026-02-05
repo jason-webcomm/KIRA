@@ -60,3 +60,22 @@ contextBridge.exposeInMainWorld('api', {
 contextBridge.exposeInMainWorld('i18n', {
   translations: loadTranslations()
 });
+
+// ============================================================================
+// Chat API - Direct chat with KIRA from desktop
+// ============================================================================
+
+contextBridge.exposeInMainWorld('chatApi', {
+  // Send a chat message to KIRA
+  sendMessage: (text) => ipcRenderer.invoke('chat-send-message', text),
+
+  // Listen for chat responses
+  onResponse: (callback) => {
+    ipcRenderer.on('chat-response', (_event, data) => callback(data));
+  },
+
+  // Remove all chat listeners
+  removeChatListeners: () => {
+    ipcRenderer.removeAllListeners('chat-response');
+  }
+});

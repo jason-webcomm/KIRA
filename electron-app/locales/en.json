@@ -5,7 +5,15 @@
   "nav": {
     "start": "Start",
     "settings": "Settings",
-    "model": "Models"
+    "model": "Models",
+    "chat": "Chat"
+  },
+  "chat": {
+    "title": "Direct Chat with KIRA",
+    "subtitle": "Chat without Slack",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "error": "Failed to send. Is the server running?"
   },
   "landing": {
     "preparing": "{{botName}} is ready to work.",

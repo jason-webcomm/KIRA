@@ -327,6 +327,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Display version
   displayVersion();
+
+  // Initialize chat view
+  initializeChatView();
 });
 
 // Navigation
@@ -729,9 +732,15 @@ function createRemoteMcpItem(server = { name: '', url: '', instruction: '' }, in
 // Escape HTML for safe display
 function escapeHtml(text) {
   if (!text) return '';
+  // First, escape HTML special characters
   const div = document.createElement('div');
   div.textContent = text;
-  return div.innerHTML;
+  let escaped = div.innerHTML;
+  // Then preserve newlines as <br> tags
+  escaped = escaped.replace(/\n/g, '<br>');
+  // Convert markdown bold (**text**) to <strong>text</strong>
+  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  return escaped;
 }
 
 // Update Remote MCP item numbers after removal
@@ -1161,5 +1170,121 @@ async function displayVersion() {
   } catch (error) {
     console.error('Failed to get version:', error);
   }
+}
+
+// ============================================
+// Chat View - Direct chat with KIRA
+// ============================================
+
+// Initialize chat view
+function initializeChatView() {
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  const chatMessagesContainer = document.getElementById('chatMessages');
+
+  if (!chatInput || !chatSendBtn || !chatMessagesContainer) {
+    return; // Chat view not available
+  }
+
+  // Send message handler
+  const sendChatMessage = async () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Add user message to UI
+    addChatMessage('user', text);
+    chatInput.value = '';
+
+    // Show loading
+    showChatLoading();
+
+    // Send via IPC
+    try {
+      const result = await window.chatApi.sendMessage(text);
+      if (!result.success) {
+        hideChatLoading();
+        addChatMessage('error', t('chat.error'));
+      }
+    } catch (error) {
+      hideChatLoading();
+      addChatMessage('error', error.message);
+    }
+  };
+
+  // Event listeners
+  chatSendBtn.addEventListener('click', sendChatMessage);
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Listen for responses from Python server
+  window.chatApi.onResponse((data) => {
+    console.log('[DEBUG-RENDERER] Received chat-response IPC:', data);
+    hideChatLoading();
+    console.log('[DEBUG-RENDERER] Calling addChatMessage with:', data.message ? data.message.substring(0, 100) + '...' : 'empty');
+    addChatMessage('kira', data.message);
+  });
+}
+
+// Add message to chat UI
+function addChatMessage(role, text) {
+  console.log('[DEBUG-RENDERER] addChatMessage called with role:', role, 'text length:', text ? text.length : 0);
+  const container = document.getElementById('chatMessages');
+  if (!container) {
+    console.log('[DEBUG-RENDERER] chatMessages container not found!');
+    return;
+  }
+
+  const placeholder = container.querySelector('.chat-placeholder');
+  if (placeholder) placeholder.remove();
+
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${role}`;
+
+  const avatar = role === 'kira'
+    ? '<div class="chat-avatar kira">K</div>'
+    : '<div class="chat-avatar user">U</div>';
+
+  const content = `<div class="chat-content">${escapeHtml(text)}</div>`;
+
+  messageDiv.innerHTML = avatar + content;
+  container.appendChild(messageDiv);
+  container.scrollTop = container.scrollHeight;
+  console.log('[DEBUG-RENDERER] Message added to chat UI');
+
+  return messageDiv;
+}
+
+// Show typing indicator
+function showChatLoading() {
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+
+  // Remove existing loading
+  hideChatLoading();
+
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'chat-message kira loading';
+  loadingDiv.id = 'chatLoading';
+  loadingDiv.innerHTML = `
+    <div class="chat-avatar kira">K</div>
+    <div class="chat-content">
+      <div class="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
+  container.appendChild(loadingDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Hide typing indicator
+function hideChatLoading() {
+  const loading = document.getElementById('chatLoading');
+  if (loading) loading.remove();
 }
 

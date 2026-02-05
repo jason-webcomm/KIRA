@@ -55,6 +55,14 @@
           </span>
           <span class="nav-label" data-i18n="nav.model">모델 설정</span>
         </button>
+        <button class="nav-item" data-view="chat">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </span>
+          <span class="nav-label" data-i18n="nav.chat">대화</span>
+        </button>
       </nav>
     </aside>
 
@@ -781,6 +789,34 @@
           <button id="saveModelBtn" class="btn btn-primary" data-i18n="settings.save">저장</button>
           <div id="saveModelStatus" class="status"></div>
         </footer>
+      </div>
+
+      <!-- Chat View -->
+      <div id="chat-view" class="view">
+        <header class="content-header">
+          <h2 data-i18n="chat.title">KIRA 직접 대화</h2>
+          <p class="subtitle" data-i18n="chat.subtitle">Slack 없이 바로 대화하기</p>
+        </header>
+
+        <div class="content-body chat-view-body">
+          <!-- Messages container -->
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-placeholder" data-i18n="chat.placeholder">
+              메시지를 입력하여 KIRA와 대화하세요...
+            </div>
+          </div>
+
+          <!-- Input area -->
+          <div class="chat-input-container">
+            <textarea
+              id="chatInput"
+              class="chat-input"
+              placeholder="메시지를 입력하세요..."
+              rows="3"
+            ></textarea>
+            <button id="chatSendBtn" class="btn btn-primary" data-i18n="chat.send">전송</button>
+          </div>
+        </div>
       </div>
     </main>
   </div>

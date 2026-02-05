@@ -561,8 +561,7 @@ async function startServer() {
     log.error('Failed to save PID file:', err.message);
   }
 
-  // Pipe logs
-  pythonProcess.stdout.pipe(logStream);
+  // Pipe logs (stderr only - stdout is handled separately for chat response detection)
   pythonProcess.stderr.pipe(logStream);
 
   // Send logs to renderer with parsed log level
@@ -577,8 +576,163 @@ async function startServer() {
     }
   };
 
+  let outputBuffer = '';
+
   pythonProcess.stdout.on('data', (data) => {
-    const lines = data.toString().split('\n').filter(line => line.trim());
+    const dataStr = data.toString();
+    outputBuffer += dataStr;
+
+    // DEBUG: Log raw data size
+    const hasAnswerToolMarker = dataStr.includes('__ANSWER_TOOL__:');
+    const hasAgentMarker = dataStr.includes('__AGENT_RESPONSE__:');
+    if (hasAnswerToolMarker || hasAgentMarker) {
+      console.log('[DEBUG] Raw stdout contains markers:', {
+        answerTool: hasAnswerToolMarker,
+        agent: hasAgentMarker,
+        length: dataStr.length
+      });
+    }
+
+    // Define markers
+    const ANSWER_TOOL_START = '__ANSWER_TOOL__:';
+    const ANSWER_TOOL_END = '__ANSWER_TOOL__:';
+    const AGENT_START = '__AGENT_RESPONSE__:';
+    const AGENT_END = '__AGENT_RESPONSE__:';
+
+    let foundAnswerTool = false;
+    let foundAgent = false;
+    let foundCount = 0;
+    let startIdx, endIdx;
+
+    // Process __ANSWER_TOOL__ markers first
+    while ((startIdx = outputBuffer.indexOf(ANSWER_TOOL_START)) !== -1) {
+      foundAnswerTool = true;
+      foundCount++;
+      const contentStart = startIdx + ANSWER_TOOL_START.length;
+      endIdx = outputBuffer.indexOf(ANSWER_TOOL_END, contentStart);
+
+      if (endIdx === -1) {
+        console.log('[DEBUG] Found __ANSWER_TOOL__ start but no end marker yet');
+        break;
+      }
+
+      let response = outputBuffer.substring(contentStart, endIdx);
+      console.log('[DEBUG] Found __ANSWER_TOOL__ response, length:', response.length);
+
+      // Remove thinking content before various thinking markers
+      let thinkEnd = response.indexOf('[/think]');
+      if (thinkEnd !== -1) {
+        response = response.substring(thinkEnd + '[/think]'.length).trim();
+        console.log('[DEBUG] Removed [/think] content, cleaned length:', response.length);
+      }
+
+      thinkEnd = response.indexOf('[/CHAT]');
+      if (thinkEnd !== -1) {
+        response = response.substring(thinkEnd + '[/CHAT]'.length).trim();
+        console.log('[DEBUG] Removed [/CHAT] content, cleaned length:', response.length);
+      }
+
+      thinkEnd = response.indexOf('</thinking>');
+      if (thinkEnd !== -1) {
+        response = response.substring(thinkEnd + '</thinking>'.length).trim();
+        console.log('[DEBUG] Removed </thinking> content, cleaned length:', response.length);
+      }
+
+      // Send to renderer
+      if (response && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('chat-response', {
+          type: 'response',
+          message: response
+        });
+        console.log('[DEBUG] Sent __ANSWER_TOOL__ response to renderer');
+      }
+
+      // Remove processed portion
+      outputBuffer = outputBuffer.substring(endIdx + ANSWER_TOOL_END.length);
+
+      if (foundCount > 100) {
+        console.log('[DEBUG] Safety limit reached');
+        break;
+      }
+    }
+
+    // Process __AGENT_RESPONSE__ markers (only if __ANSWER_TOOL__ was NOT found)
+    // This prevents duplicate responses when both markers are present
+    if (!foundAnswerTool) {
+      // Handle __AGENT_RESPONSE__ markers
+      while ((startIdx = outputBuffer.indexOf(AGENT_START)) !== -1) {
+        foundAgent = true;
+        foundCount++;
+        const contentStart = startIdx + AGENT_START.length;
+        endIdx = outputBuffer.indexOf(AGENT_END, contentStart);
+
+        if (endIdx === -1) {
+          console.log('[DEBUG] Found __AGENT_RESPONSE__ start but no end marker yet');
+          break;
+        }
+
+        let response = outputBuffer.substring(contentStart, endIdx);
+        console.log('[DEBUG] Found __AGENT_RESPONSE__ response, length:', response.length);
+
+        // Remove thinking content before various thinking markers
+        let thinkEnd = response.indexOf('</think>');
+        if (thinkEnd !== -1) {
+          response = response.substring(thinkEnd + '</think>'.length).trim();
+          console.log('[DEBUG] Removed </think> content, cleaned length:', response.length);
+        }
+
+        thinkEnd = response.indexOf('[/CHAT]');
+        if (thinkEnd !== -1) {
+          response = response.substring(thinkEnd + '[/CHAT]'.length).trim();
+          console.log('[DEBUG] Removed [/CHAT] content, cleaned length:', response.length);
+        }
+
+        thinkEnd = response.indexOf('</thinking>');
+        if (thinkEnd !== -1) {
+          response = response.substring(thinkEnd + '</thinking>'.length).trim();
+          console.log('[DEBUG] Removed </thinking> content, cleaned length:', response.length);
+        }
+
+        // If __ANSWER_TOOL__ was not found, __AGENT_RESPONSE__ content IS the user's response
+        // (Agent returned final message directly without using tool)
+        if (response && response.length > 0) {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('chat-response', {
+              type: 'response',
+              message: response
+            });
+            console.log('[DEBUG] Sent __AGENT_RESPONSE__ to renderer, length:', response.length);
+          }
+        } else {
+          console.log('[DEBUG] Empty __AGENT_RESPONSE__, skipping');
+        }
+
+        // Remove processed portion
+        outputBuffer = outputBuffer.substring(endIdx + AGENT_END.length);
+
+        if (foundCount > 100) {
+          console.log('[DEBUG] Safety limit reached');
+          break;
+        }
+      }
+    } else if (hasAgentMarker) {
+      console.log('[DEBUG] Skipping __AGENT_RESPONSE__ markers (deduplication: __ANSWER_TOOL__ already sent)');
+      // Remove __AGENT_RESPONSE__ content from buffer to prevent log processing
+      outputBuffer = outputBuffer.replace(new RegExp(AGENT_START + '.*?' + AGENT_END, 'gs'), '');
+    }
+
+    // Process regular logs (everything before first chat response or after last complete response)
+    let logContent = outputBuffer;
+
+    // If there's an incomplete response at the end, only process logs before it
+    const lastAnswerToolPos = outputBuffer.lastIndexOf(ANSWER_TOOL_START);
+    const lastAgentPos = outputBuffer.lastIndexOf(AGENT_START);
+    const lastMarkerPos = Math.max(lastAnswerToolPos, lastAgentPos);
+    if (lastMarkerPos !== -1) {
+      logContent = outputBuffer.substring(0, lastMarkerPos);
+    }
+
+    const lines = logContent.split('\n').filter(line => line.trim());
     lines.forEach(logLine => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('server-log', {
@@ -929,6 +1083,27 @@ function registerIPCHandlers() {
     } catch (error) {
       log.error('Error opening data folder:', error);
       return { error: error.message };
+    }
+  });
+
+  // Chat message handler - send messages to Python server via stdin
+  ipcMain.handle('chat-send-message', async (_event, text) => {
+    if (!pythonProcess || pythonProcess.exitCode !== null) {
+      return { success: false, error: 'Server not running' };
+    }
+
+    if (!pythonProcess.stdin) {
+      return { success: false, error: 'stdin not available' };
+    }
+
+    try {
+      const chatMessage = `__CHAT__: ${text}\n`;
+      pythonProcess.stdin.write(chatMessage);
+      log.info('Chat message sent to Python:', text.substring(0, 50) + '...');
+      return { success: true };
+    } catch (err) {
+      log.error('Failed to send chat message:', err);
+      return { success: false, error: err.message };
     }
   });
 }
